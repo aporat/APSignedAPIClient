@@ -8,12 +8,17 @@
 
 /* Begin PBXBuildFile section */
 		537EDD0E24F49F1E003DC54A /* APSignedAPIClient.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 537EDD0424F49F1E003DC54A /* APSignedAPIClient.framework */; };
+		778D186D2DA2DB2D00101D91 /* APSignedAPIClient.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 537EDD0424F49F1E003DC54A /* APSignedAPIClient.framework */; };
+		778D186E2DA2DB2D00101D91 /* APSignedAPIClient.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 537EDD0424F49F1E003DC54A /* APSignedAPIClient.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		778D18732DA2DBA100101D91 /* CoreAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 778D18722DA2DBA100101D91 /* CoreAPIClientTests.swift */; };
+		778D18772DA2DC3600101D91 /* CoreAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 778D18742DA2DC3600101D91 /* CoreAPIClient.swift */; };
+		778D18782DA2DC3600101D91 /* CoreAPIRequestAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 778D18752DA2DC3600101D91 /* CoreAPIRequestAdapter.swift */; };
+		778D18792DA2DC3600101D91 /* CoreAPIRequestRetrier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 778D18762DA2DC3600101D91 /* CoreAPIRequestRetrier.swift */; };
 		77ADA56C2DA2D6A20087B6EA /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 77ADA56B2DA2D6A20087B6EA /* Alamofire */; };
 		77ADA56F2DA2D6B00087B6EA /* CryptoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 77ADA56E2DA2D6B00087B6EA /* CryptoSwift */; };
 		77ADA5722DA2D6BE0087B6EA /* APWebAuthentication in Frameworks */ = {isa = PBXBuildFile; productRef = 77ADA5712DA2D6BE0087B6EA /* APWebAuthentication */; };
 		77ADA5752DA2D6CD0087B6EA /* SwiftyUserDefaults in Frameworks */ = {isa = PBXBuildFile; productRef = 77ADA5742DA2D6CD0087B6EA /* SwiftyUserDefaults */; };
 		77ADA5782DA2D6DA0087B6EA /* SwiftyJSON in Frameworks */ = {isa = PBXBuildFile; productRef = 77ADA5772DA2D6DA0087B6EA /* SwiftyJSON */; };
-		77ADA57B2DA2D6F00087B6EA /* APSignedAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77ADA5792DA2D6F00087B6EA /* APSignedAPIClientTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -24,13 +29,37 @@
 			remoteGlobalIDString = 537EDD0324F49F1E003DC54A;
 			remoteInfo = ProgressToolbar;
 		};
+		778D186F2DA2DB2D00101D91 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 537EDCFB24F49F1E003DC54A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 537EDD0324F49F1E003DC54A;
+			remoteInfo = APSignedAPIClient;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		778D18712DA2DB2D00101D91 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				778D186E2DA2DB2D00101D91 /* APSignedAPIClient.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		537EDD0424F49F1E003DC54A /* APSignedAPIClient.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = APSignedAPIClient.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		537EDD0D24F49F1E003DC54A /* APSignedAPIClientTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = APSignedAPIClientTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		778D18722DA2DBA100101D91 /* CoreAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAPIClientTests.swift; sourceTree = "<group>"; };
+		778D18742DA2DC3600101D91 /* CoreAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAPIClient.swift; sourceTree = "<group>"; };
+		778D18752DA2DC3600101D91 /* CoreAPIRequestAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAPIRequestAdapter.swift; sourceTree = "<group>"; };
+		778D18762DA2DC3600101D91 /* CoreAPIRequestRetrier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAPIRequestRetrier.swift; sourceTree = "<group>"; };
 		778D4D322D5E3FE0008738C8 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
-		77ADA5792DA2D6F00087B6EA /* APSignedAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APSignedAPIClientTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,6 +80,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				537EDD0E24F49F1E003DC54A /* APSignedAPIClient.framework in Frameworks */,
+				778D186D2DA2DB2D00101D91 /* APSignedAPIClient.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -63,6 +93,7 @@
 				778D4D322D5E3FE0008738C8 /* Package.swift */,
 				77BAE9522D90D8E7008CC558 /* Sources */,
 				77ADA57A2DA2D6F00087B6EA /* Tests */,
+				778D186C2DA2DB2B00101D91 /* Frameworks */,
 				537EDD0524F49F1E003DC54A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -76,10 +107,17 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		778D186C2DA2DB2B00101D91 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		77ADA57A2DA2D6F00087B6EA /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				77ADA5792DA2D6F00087B6EA /* APSignedAPIClientTests.swift */,
+				778D18722DA2DBA100101D91 /* CoreAPIClientTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -87,6 +125,9 @@
 		77BAE9522D90D8E7008CC558 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				778D18742DA2DC3600101D91 /* CoreAPIClient.swift */,
+				778D18752DA2DC3600101D91 /* CoreAPIRequestAdapter.swift */,
+				778D18762DA2DC3600101D91 /* CoreAPIRequestRetrier.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -136,11 +177,13 @@
 				537EDD0924F49F1E003DC54A /* Sources */,
 				537EDD0A24F49F1E003DC54A /* Frameworks */,
 				537EDD0B24F49F1E003DC54A /* Resources */,
+				778D18712DA2DB2D00101D91 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				537EDD1024F49F1E003DC54A /* PBXTargetDependency */,
+				778D18702DA2DB2D00101D91 /* PBXTargetDependency */,
 			);
 			name = APSignedAPIClientTests;
 			packageProductDependencies = (
@@ -166,7 +209,7 @@
 					};
 					537EDD0C24F49F1E003DC54A = {
 						CreatedOnToolsVersion = 11.6;
-						LastSwiftMigration = 1160;
+						LastSwiftMigration = 1630;
 					};
 				};
 			};
@@ -218,6 +261,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				778D18772DA2DC3600101D91 /* CoreAPIClient.swift in Sources */,
+				778D18782DA2DC3600101D91 /* CoreAPIRequestAdapter.swift in Sources */,
+				778D18792DA2DC3600101D91 /* CoreAPIRequestRetrier.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -225,7 +271,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				77ADA57B2DA2D6F00087B6EA /* APSignedAPIClientTests.swift in Sources */,
+				778D18732DA2DBA100101D91 /* CoreAPIClientTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -236,6 +282,11 @@
 			isa = PBXTargetDependency;
 			target = 537EDD0324F49F1E003DC54A /* APSignedAPIClient */;
 			targetProxy = 537EDD0F24F49F1E003DC54A /* PBXContainerItemProxy */;
+		};
+		778D18702DA2DB2D00101D91 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 537EDD0324F49F1E003DC54A /* APSignedAPIClient */;
+			targetProxy = 778D186F2DA2DB2D00101D91 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

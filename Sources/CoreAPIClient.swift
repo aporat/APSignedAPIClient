@@ -1,7 +1,6 @@
 import Alamofire
 import CryptoKit
 import SwiftyJSON
-import SwiftyUserDefaults
 import Foundation
 import APWebAuthentication
 

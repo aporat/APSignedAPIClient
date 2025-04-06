@@ -1,12 +1,14 @@
 // swift-tools-version:5.9
-// The swift-tools-version declares the minimum version of Swift required to build this package.
-
 import PackageDescription
 
 let package = Package(
     name: "APSignedAPIClient",
     platforms: [
-        .iOS(.v16)
+        .iOS(.v16),
+        .macOS(.v12),
+        .tvOS(.v16),
+        .watchOS(.v9),
+        .visionOS(.v1)
     ],
     products: [
         .library(
@@ -17,16 +19,14 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.0.0"),
         .package(url: "https://github.com/aporat/APWebAuthentication.git", branch: "main"),
-        .package(url: "https://github.com/sunshinejr/SwiftyUserDefaults.git", from: "5.0.0"),
         .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "5.0.0")
-   ],
+    ],
     targets: [
         .target(
             name: "APSignedAPIClient",
             dependencies: [
                 "Alamofire",
                 "APWebAuthentication",
-                "SwiftyUserDefaults",
                 "SwiftyJSON"
             ]
         ),

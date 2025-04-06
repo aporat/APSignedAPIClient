@@ -28,7 +28,7 @@ Add `APSignedAPIClient` to your project via Swift Package Manager:
 1. In Xcode, go to **File > Add Packages**.
 2. Enter the repository URL:
    ```
-   https://github.com/<your-username>/APSignedAPIClient.git
+   https://github.com/aporat/APSignedAPIClient.git
    ```
 3. Specify the version (e.g., `1.0.0`) or use the latest commit.
 4. Add the package to your target.
@@ -37,7 +37,7 @@ Alternatively, add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/<your-username>/APSignedAPIClient.git", from: "1.0.0")
+    .package(url: "https://github.com/aporat/APSignedAPIClient.git", from: "1.0.0")
 ]
 ```
 

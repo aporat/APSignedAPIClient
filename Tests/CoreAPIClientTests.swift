@@ -1,13 +1,12 @@
 import XCTest
 @testable import APSignedAPIClient
 import Alamofire
-import CryptoSwift
+import CryptoKit
 
 final class CoreAPIClientTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        // Configure CoreAPIClient before each test
         CoreAPIClient.setup(
             baseURLString: "https://api.example.com",
             appName: "TestApp",
@@ -19,43 +18,34 @@ final class CoreAPIClientTests: XCTestCase {
     }
     
     override func tearDown() {
-        // Clean up after each test if needed
         super.tearDown()
     }
     
-    // Test that setup configures public static properties correctly
     func testSetupConfiguresProperties() {
-        XCTAssertEqual(CoreAPIClient.baseURLString, "https://api.example.com")
-        XCTAssertEqual(CoreAPIClient.clientVersion, "400")
+        XCTAssertEqual(CoreAPIClient.baseURLString, "https://api.example.com", "baseURLString should match the setup value")
+        XCTAssertEqual(CoreAPIClient.clientVersion, "400", "clientVersion should match the setup value")
     }
     
-    // Test signature header generation
     func testAddSignatureHeaders() throws {
-        // Mock a URLRequest
         let url = URL(string: "https://api.example.com/test")!
         var urlRequest = URLRequest(url: url)
         urlRequest.method = .get
-        
-        // Mock parameters
         let params: Parameters = ["key": "value"]
         
-        // Add signature headers
         let signedRequest = CoreAPIClient.addSignatureHeaders(urlRequest, params: params)
         
-        // Verify headers are added
-        XCTAssertNotNil(signedRequest.value(forHTTPHeaderField: "X-Auth-Signature"))
-        XCTAssertNotNil(signedRequest.value(forHTTPHeaderField: "X-Auth-Timestamp"))
-        XCTAssertEqual(signedRequest.value(forHTTPHeaderField: "X-Auth-Version"), "400")
-        XCTAssertEqual(signedRequest.value(forHTTPHeaderField: "X-Auth-Client-ID"), "testClientId")
-        XCTAssertEqual(signedRequest.value(forHTTPHeaderField: "X-App-Name"), "TestApp")
-        XCTAssertEqual(signedRequest.value(forHTTPHeaderField: "User-Agent"), "TestApp/1.0")
+        XCTAssertNotNil(signedRequest.value(forHTTPHeaderField: "X-Auth-Signature"), "Signature header should be present")
+        XCTAssertNotNil(signedRequest.value(forHTTPHeaderField: "X-Auth-Timestamp"), "Timestamp header should be present")
+        XCTAssertEqual(signedRequest.value(forHTTPHeaderField: "X-Auth-Version"), "400", "Version header should match clientVersion")
+        XCTAssertEqual(signedRequest.value(forHTTPHeaderField: "X-Auth-Client-ID"), "testClientId", "Client ID header should match setup value")
+        XCTAssertEqual(signedRequest.value(forHTTPHeaderField: "X-App-Name"), "TestApp", "App name header should match setup value")
+        XCTAssertEqual(signedRequest.value(forHTTPHeaderField: "User-Agent"), "TestApp/1.0", "User-Agent header should match setup value")
         
-        // Verify signature
         let timestamp = signedRequest.value(forHTTPHeaderField: "X-Auth-Timestamp")!
-        let bundleId = Bundle.main.bundleIdentifier ?? "com.test" // Fallback for test environment
+        let bundleId = Bundle.main.bundleIdentifier ?? "com.test"
         let components = [
             bundleId,
-            timestamp.extendToLength(10),
+            timestamp,
             "testClientId",
             "400",
             "GET",
@@ -63,18 +53,15 @@ final class CoreAPIClientTests: XCTestCase {
             "/test"
         ]
         let signatureParam = components.joined(separator: "")
-        let expectedSignature = try HMAC(key: "testClientKey", variant: .sha2(.sha256))
-            .authenticate(Array(signatureParam.utf8))
-            .toHexString()
-        XCTAssertEqual(signedRequest.value(forHTTPHeaderField: "X-Auth-Signature"), expectedSignature)
-    }
-    
-}
-
-// Helper extension for consistent timestamp length in tests
-extension String {
-    func extendToLength(_ length: Int) -> String {
-        guard count < length else { return self }
-        return String(repeating: "0", count: length - count) + self
+        let data = Data(signatureParam.utf8)
+        let key = SymmetricKey(data: Data("testClientKey".utf8))
+        let expectedSignature = HMAC<SHA256>.authenticationCode(for: data, using: key)
+            .map { String(format: "%02x", $0) }
+            .joined()
+        XCTAssertEqual(
+            signedRequest.value(forHTTPHeaderField: "X-Auth-Signature"),
+            expectedSignature,
+            "Signature should match the expected HMAC-SHA256 value"
+        )
     }
 }

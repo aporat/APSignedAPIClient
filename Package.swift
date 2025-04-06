@@ -16,7 +16,6 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.0.0"),
-        .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", from: "1.8.0"),
         .package(url: "https://github.com/aporat/APWebAuthentication.git", branch: "main"),
         .package(url: "https://github.com/sunshinejr/SwiftyUserDefaults.git", from: "5.0.0"),
         .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "5.0.0")
@@ -26,7 +25,6 @@ let package = Package(
             name: "APSignedAPIClient",
             dependencies: [
                 "Alamofire",
-                "CryptoSwift",
                 "APWebAuthentication",
                 "SwiftyUserDefaults",
                 "SwiftyJSON"

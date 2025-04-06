@@ -1,5 +1,5 @@
 import Alamofire
-import CryptoSwift
+import CryptoKit
 import SwiftyJSON
 import SwiftyUserDefaults
 import Foundation
@@ -146,10 +146,12 @@ public final class CoreAPIClient {
         ]
         
         let signatureParam = components.joined(separator: "")
-        let bytes: [UInt8] = Array(signatureParam.utf8)
-        if let signature = try? HMAC(key: clientKey, variant: .sha2(.sha256)).authenticate(bytes) {
-            urlRequest.headers.add(HTTPHeader(name: "X-Auth-Signature", value: signature.toHexString()))
-        }
+        let data = Data(signatureParam.utf8)
+        guard let keyData = clientKey.data(using: .utf8) else { return urlRequest }
+        let key = SymmetricKey(data: keyData)
+        let signature = HMAC<SHA256>.authenticationCode(for: data, using: key)
+        let hexSignature = signature.map { String(format: "%02x", $0) }.joined()
+        urlRequest.headers.add(HTTPHeader(name: "X-Auth-Signature", value: hexSignature))
         
         urlRequest.headers.add(HTTPHeader(name: "X-Auth-Timestamp", value: timestamp))
         urlRequest.headers.add(HTTPHeader(name: "X-Auth-Version", value: clientVersion))

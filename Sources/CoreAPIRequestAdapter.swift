@@ -1,5 +1,5 @@
 import Alamofire
-import UIKit
+import Foundation
 
 final class CoreAPIRequestAdapter: RequestAdapter {
     var accountAuthToken: String?

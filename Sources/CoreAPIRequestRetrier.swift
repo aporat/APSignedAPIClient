@@ -1,6 +1,6 @@
 import Alamofire
 import HTTPStatusCodes
-import UIKit
+import Foundation
 
 final class CoreAPIRequestRetrier: RequestRetrier {
     fileprivate var maxRetryCount: UInt = 5

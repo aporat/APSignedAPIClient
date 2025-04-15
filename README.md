@@ -1,10 +1,9 @@
 # APSignedAPIClient
 
-[![Swift](https://img.shields.io/badge/Swift-5.9_5.10_6.0-orange?style=flat-square)](https://img.shields.io/badge/Swift-5.9_5.10_6.0-Orange?style=flat-square)
-[![Platforms](https://img.shields.io/badge/Platforms-macOS_iOS_tvOS_watchOS_visionOS_-yellowgreen?style=flat-square)](https://img.shields.io/badge/Platforms-macOS_iOS_tvOS_watchOS_vision_OS?style=flat-square)
-[![Swift Package Manager](https://img.shields.io/badge/Swift_Package_Manager-compatible-orange?style=flat-square)](https://img.shields.io/badge/Swift_Package_Manager-compatible-orange?style=flat-square)
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/aporat/APWebAuthentication/ci.yml?style=flat-square)
-[![Codecov](https://img.shields.io/codecov/c/github/aporat/APSignedAPIClient?style=flat-square)](https://codecov.io/github/aporat/APSignedAPIClient)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Faporat%2FAAPSignedAPIClient%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/aporat/APSignedAPIClient)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Faporat%2FAPSignedAPIClient%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/aporat/APSignedAPIClient)
+![GitHub Actions Workflow Status](https://github.com/aporat/APSignedAPIClient/actions/workflows/ci.yml/badge.svg)
+[![codecov](https://codecov.io/github/aporat/APSignedAPIClient/graph/badge.svg?token=OHF9AE0KMC)](https://codecov.io/github/aporat/APSignedAPIClient)
 
 `APSignedAPIClient` is a Swift package for making signed API requests with HMAC-SHA256 authentication. It provides a flexible, reusable client for iOS applications, leveraging Alamofire for networking. This package is designed to simplify secure API communication by handling request signing, authentication tokens, and error handling out of the box.
 

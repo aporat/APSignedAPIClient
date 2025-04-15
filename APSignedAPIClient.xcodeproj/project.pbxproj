@@ -55,6 +55,11 @@
 /* Begin PBXFileReference section */
 		537EDD0424F49F1E003DC54A /* APSignedAPIClient.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = APSignedAPIClient.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		537EDD0D24F49F1E003DC54A /* APSignedAPIClientTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = APSignedAPIClientTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		777A84682DAEA1A700872AB4 /* ci.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = ci.yml; sourceTree = "<group>"; };
+		777A846A2DAEA1A700872AB4 /* dependabot.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = dependabot.yml; sourceTree = "<group>"; };
+		777A846C2DAEA1A700872AB4 /* Gemfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Gemfile; sourceTree = "<group>"; };
+		777A846D2DAEA1A700872AB4 /* Gemfile.lock */ = {isa = PBXFileReference; lastKnownFileType = text; path = Gemfile.lock; sourceTree = "<group>"; };
+		777A846E2DAEA1A700872AB4 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		778D18722DA2DBA100101D91 /* CoreAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAPIClientTests.swift; sourceTree = "<group>"; };
 		778D18742DA2DC3600101D91 /* CoreAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAPIClient.swift; sourceTree = "<group>"; };
 		778D18752DA2DC3600101D91 /* CoreAPIRequestAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAPIRequestAdapter.swift; sourceTree = "<group>"; };
@@ -91,6 +96,10 @@
 			isa = PBXGroup;
 			children = (
 				778D4D322D5E3FE0008738C8 /* Package.swift */,
+				777A846B2DAEA1A700872AB4 /* .github */,
+				777A846C2DAEA1A700872AB4 /* Gemfile */,
+				777A846D2DAEA1A700872AB4 /* Gemfile.lock */,
+				777A846E2DAEA1A700872AB4 /* README.md */,
 				77BAE9522D90D8E7008CC558 /* Sources */,
 				77ADA57A2DA2D6F00087B6EA /* Tests */,
 				778D186C2DA2DB2B00101D91 /* Frameworks */,
@@ -105,6 +114,23 @@
 				537EDD0D24F49F1E003DC54A /* APSignedAPIClientTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		777A84692DAEA1A700872AB4 /* workflows */ = {
+			isa = PBXGroup;
+			children = (
+				777A84682DAEA1A700872AB4 /* ci.yml */,
+			);
+			path = workflows;
+			sourceTree = "<group>";
+		};
+		777A846B2DAEA1A700872AB4 /* .github */ = {
+			isa = PBXGroup;
+			children = (
+				777A84692DAEA1A700872AB4 /* workflows */,
+				777A846A2DAEA1A700872AB4 /* dependabot.yml */,
+			);
+			path = .github;
 			sourceTree = "<group>";
 		};
 		778D186C2DA2DB2B00101D91 /* Frameworks */ = {
@@ -346,6 +372,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -406,6 +433,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -439,7 +467,11 @@
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
 				PRODUCT_BUNDLE_IDENTIFIER = APStorePersistence;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				REGISTER_APP_GROUPS = YES;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -468,7 +500,11 @@
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
 				PRODUCT_BUNDLE_IDENTIFIER = APStorePersistence;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				REGISTER_APP_GROUPS = YES;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -487,6 +523,10 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = APStorePersistenceTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -506,6 +546,10 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = APStorePersistenceTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

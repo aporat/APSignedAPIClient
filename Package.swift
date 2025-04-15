@@ -1,14 +1,10 @@
-// swift-tools-version:5.9
+// swift-tools-version:5.7
 import PackageDescription
 
 let package = Package(
     name: "APSignedAPIClient",
     platforms: [
-        .iOS(.v16),
-        .macOS(.v12),
-        .tvOS(.v16),
-        .watchOS(.v9),
-        .visionOS(.v1)
+        .iOS(.v15)
     ],
     products: [
         .library(
@@ -18,7 +14,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.0.0"),
-        .package(url: "https://github.com/aporat/APWebAuthentication.git", branch: "main"),
+        .package(path: "../APWebAuthentication"),
         .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "5.0.0")
     ],
     targets: [
@@ -34,5 +30,6 @@ let package = Package(
             name: "APSignedAPIClientTests",
             dependencies: ["APSignedAPIClient"]
         )
-    ]
+    ],
+    swiftLanguageVersions: [.v5]
 )

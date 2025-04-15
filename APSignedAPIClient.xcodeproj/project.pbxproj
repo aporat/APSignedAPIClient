@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -240,6 +240,7 @@
 				};
 			};
 			buildConfigurationList = 537EDCFE24F49F1E003DC54A /* Build configuration list for PBXProject "APSignedAPIClient" */;
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -254,7 +255,6 @@
 				77ADA5732DA2D6CD0087B6EA /* XCRemoteSwiftPackageReference "SwiftyUserDefaults" */,
 				77ADA5762DA2D6DA0087B6EA /* XCRemoteSwiftPackageReference "SwiftyJSON" */,
 			);
-			preferredProjectObjectVersion = 77;
 			productRefGroup = 537EDD0524F49F1E003DC54A /* Products */;
 			projectDirPath = "";
 			projectRoot = "";

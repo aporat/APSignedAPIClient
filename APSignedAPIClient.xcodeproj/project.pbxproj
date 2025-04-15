@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		537EDD0E24F49F1E003DC54A /* APSignedAPIClient.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 537EDD0424F49F1E003DC54A /* APSignedAPIClient.framework */; };
+		777A847B2DAEB6D300872AB4 /* APWebAuthentication in Frameworks */ = {isa = PBXBuildFile; productRef = 777A847A2DAEB6D300872AB4 /* APWebAuthentication */; };
 		778D186D2DA2DB2D00101D91 /* APSignedAPIClient.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 537EDD0424F49F1E003DC54A /* APSignedAPIClient.framework */; };
 		778D186E2DA2DB2D00101D91 /* APSignedAPIClient.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 537EDD0424F49F1E003DC54A /* APSignedAPIClient.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		778D18732DA2DBA100101D91 /* CoreAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 778D18722DA2DBA100101D91 /* CoreAPIClientTests.swift */; };
@@ -16,7 +17,6 @@
 		778D18792DA2DC3600101D91 /* CoreAPIRequestRetrier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 778D18762DA2DC3600101D91 /* CoreAPIRequestRetrier.swift */; };
 		77ADA56C2DA2D6A20087B6EA /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 77ADA56B2DA2D6A20087B6EA /* Alamofire */; };
 		77ADA56F2DA2D6B00087B6EA /* CryptoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 77ADA56E2DA2D6B00087B6EA /* CryptoSwift */; };
-		77ADA5722DA2D6BE0087B6EA /* APWebAuthentication in Frameworks */ = {isa = PBXBuildFile; productRef = 77ADA5712DA2D6BE0087B6EA /* APWebAuthentication */; };
 		77ADA5752DA2D6CD0087B6EA /* SwiftyUserDefaults in Frameworks */ = {isa = PBXBuildFile; productRef = 77ADA5742DA2D6CD0087B6EA /* SwiftyUserDefaults */; };
 		77ADA5782DA2D6DA0087B6EA /* SwiftyJSON in Frameworks */ = {isa = PBXBuildFile; productRef = 77ADA5772DA2D6DA0087B6EA /* SwiftyJSON */; };
 /* End PBXBuildFile section */
@@ -73,10 +73,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				77ADA56C2DA2D6A20087B6EA /* Alamofire in Frameworks */,
-				77ADA5722DA2D6BE0087B6EA /* APWebAuthentication in Frameworks */,
 				77ADA56F2DA2D6B00087B6EA /* CryptoSwift in Frameworks */,
 				77ADA5782DA2D6DA0087B6EA /* SwiftyJSON in Frameworks */,
 				77ADA5752DA2D6CD0087B6EA /* SwiftyUserDefaults in Frameworks */,
+				777A847B2DAEB6D300872AB4 /* APWebAuthentication in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -188,9 +188,9 @@
 			packageProductDependencies = (
 				77ADA56B2DA2D6A20087B6EA /* Alamofire */,
 				77ADA56E2DA2D6B00087B6EA /* CryptoSwift */,
-				77ADA5712DA2D6BE0087B6EA /* APWebAuthentication */,
 				77ADA5742DA2D6CD0087B6EA /* SwiftyUserDefaults */,
 				77ADA5772DA2D6DA0087B6EA /* SwiftyJSON */,
+				777A847A2DAEB6D300872AB4 /* APWebAuthentication */,
 			);
 			productName = ProgressToolbar;
 			productReference = 537EDD0424F49F1E003DC54A /* APSignedAPIClient.framework */;
@@ -251,9 +251,9 @@
 			packageReferences = (
 				77ADA56A2DA2D6A20087B6EA /* XCRemoteSwiftPackageReference "Alamofire" */,
 				77ADA56D2DA2D6B00087B6EA /* XCRemoteSwiftPackageReference "CryptoSwift" */,
-				77ADA5702DA2D6BE0087B6EA /* XCRemoteSwiftPackageReference "APWebAuthentication" */,
 				77ADA5732DA2D6CD0087B6EA /* XCRemoteSwiftPackageReference "SwiftyUserDefaults" */,
 				77ADA5762DA2D6DA0087B6EA /* XCRemoteSwiftPackageReference "SwiftyJSON" */,
+				777A84792DAEB6D300872AB4 /* XCRemoteSwiftPackageReference "APWebAuthentication" */,
 			);
 			productRefGroup = 537EDD0524F49F1E003DC54A /* Products */;
 			projectDirPath = "";
@@ -596,6 +596,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		777A84792DAEB6D300872AB4 /* XCRemoteSwiftPackageReference "APWebAuthentication" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/aporat/APWebAuthentication.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.0;
+			};
+		};
 		77ADA56A2DA2D6A20087B6EA /* XCRemoteSwiftPackageReference "Alamofire" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
@@ -610,14 +618,6 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.8.4;
-			};
-		};
-		77ADA5702DA2D6BE0087B6EA /* XCRemoteSwiftPackageReference "APWebAuthentication" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/aporat/APWebAuthentication.git";
-			requirement = {
-				branch = main;
-				kind = branch;
 			};
 		};
 		77ADA5732DA2D6CD0087B6EA /* XCRemoteSwiftPackageReference "SwiftyUserDefaults" */ = {
@@ -639,6 +639,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		777A847A2DAEB6D300872AB4 /* APWebAuthentication */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 777A84792DAEB6D300872AB4 /* XCRemoteSwiftPackageReference "APWebAuthentication" */;
+			productName = APWebAuthentication;
+		};
 		77ADA56B2DA2D6A20087B6EA /* Alamofire */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 77ADA56A2DA2D6A20087B6EA /* XCRemoteSwiftPackageReference "Alamofire" */;
@@ -648,11 +653,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 77ADA56D2DA2D6B00087B6EA /* XCRemoteSwiftPackageReference "CryptoSwift" */;
 			productName = CryptoSwift;
-		};
-		77ADA5712DA2D6BE0087B6EA /* APWebAuthentication */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 77ADA5702DA2D6BE0087B6EA /* XCRemoteSwiftPackageReference "APWebAuthentication" */;
-			productName = APWebAuthentication;
 		};
 		77ADA5742DA2D6CD0087B6EA /* SwiftyUserDefaults */ = {
 			isa = XCSwiftPackageProductDependency;

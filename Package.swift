@@ -24,11 +24,13 @@ let package = Package(
                 "Alamofire",
                 "APWebAuthentication",
                 "SwiftyJSON"
-            ]
+            ],
+            path: "Sources"
         ),
         .testTarget(
             name: "APSignedAPIClientTests",
-            dependencies: ["APSignedAPIClient"]
+            dependencies: ["APSignedAPIClient"],
+            path: "Tests"
         )
     ],
     swiftLanguageVersions: [.v5]

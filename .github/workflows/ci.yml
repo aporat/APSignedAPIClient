@@ -17,9 +17,6 @@ jobs:
           - platform: iOS Simulator
             device: iPhone 16 Pro
             os: 18.2
-          - platform: macOS
-            device: Mac
-            os: 14.4
 
     steps:
       - name: Checkout Repository

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 90;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -41,14 +41,12 @@
 /* Begin PBXCopyFilesBuildPhase section */
 		778D18712DA2DB2D00101D91 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = "";
-			dstSubfolderSpec = 10;
+			dstSubfolder = Frameworks;
 			files = (
 				778D186E2DA2DB2D00101D91 /* APSignedAPIClient.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
@@ -70,7 +68,6 @@
 /* Begin PBXFrameworksBuildPhase section */
 		537EDD0124F49F1E003DC54A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				77ADA56C2DA2D6A20087B6EA /* Alamofire in Frameworks */,
 				77ADA56F2DA2D6B00087B6EA /* CryptoSwift in Frameworks */,
@@ -78,16 +75,13 @@
 				77ADA5752DA2D6CD0087B6EA /* SwiftyUserDefaults in Frameworks */,
 				777A847B2DAEB6D300872AB4 /* APWebAuthentication in Frameworks */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		537EDD0A24F49F1E003DC54A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				537EDD0E24F49F1E003DC54A /* APSignedAPIClient.framework in Frameworks */,
 				778D186D2DA2DB2D00101D91 /* APSignedAPIClient.framework in Frameworks */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
@@ -163,10 +157,8 @@
 /* Begin PBXHeadersBuildPhase section */
 		537EDCFF24F49F1E003DC54A /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
@@ -181,8 +173,6 @@
 				537EDD0224F49F1E003DC54A /* Resources */,
 			);
 			buildRules = (
-			);
-			dependencies = (
 			);
 			name = APSignedAPIClient;
 			packageProductDependencies = (
@@ -212,8 +202,6 @@
 				778D18702DA2DB2D00101D91 /* PBXTargetDependency */,
 			);
 			name = APSignedAPIClientTests;
-			packageProductDependencies = (
-			);
 			productName = ProgressToolbarTests;
 			productReference = 537EDD0D24F49F1E003DC54A /* APSignedAPIClientTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -240,7 +228,6 @@
 				};
 			};
 			buildConfigurationList = 537EDCFE24F49F1E003DC54A /* Build configuration list for PBXProject "APSignedAPIClient" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -255,6 +242,7 @@
 				77ADA5762DA2D6DA0087B6EA /* XCRemoteSwiftPackageReference "SwiftyJSON" */,
 				777A84792DAEB6D300872AB4 /* XCRemoteSwiftPackageReference "APWebAuthentication" */,
 			);
+			preferredProjectObjectVersion = 90;
 			productRefGroup = 537EDD0524F49F1E003DC54A /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -268,38 +256,30 @@
 /* Begin PBXResourcesBuildPhase section */
 		537EDD0224F49F1E003DC54A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		537EDD0B24F49F1E003DC54A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		537EDD0024F49F1E003DC54A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				778D18772DA2DC3600101D91 /* CoreAPIClient.swift in Sources */,
 				778D18782DA2DC3600101D91 /* CoreAPIRequestAdapter.swift in Sources */,
 				778D18792DA2DC3600101D91 /* CoreAPIRequestRetrier.swift in Sources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		537EDD0924F49F1E003DC54A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				778D18732DA2DBA100101D91 /* CoreAPIClientTests.swift in Sources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
@@ -317,7 +297,7 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		537EDD1624F49F1E003DC54A /* Debug */ = {
+		537EDD1624F49F1E003DC54A /* Debug configuration for PBXProject "APSignedAPIClient" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -384,7 +364,7 @@
 			};
 			name = Debug;
 		};
-		537EDD1724F49F1E003DC54A /* Release */ = {
+		537EDD1724F49F1E003DC54A /* Release configuration for PBXProject "APSignedAPIClient" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -445,7 +425,7 @@
 			};
 			name = Release;
 		};
-		537EDD1924F49F1E003DC54A /* Debug */ = {
+		537EDD1924F49F1E003DC54A /* Debug configuration for PBXNativeTarget "APSignedAPIClient" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
@@ -478,7 +458,7 @@
 			};
 			name = Debug;
 		};
-		537EDD1A24F49F1E003DC54A /* Release */ = {
+		537EDD1A24F49F1E003DC54A /* Release configuration for PBXNativeTarget "APSignedAPIClient" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
@@ -510,7 +490,7 @@
 			};
 			name = Release;
 		};
-		537EDD1C24F49F1E003DC54A /* Debug */ = {
+		537EDD1C24F49F1E003DC54A /* Debug configuration for PBXNativeTarget "APSignedAPIClientTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
@@ -537,7 +517,7 @@
 			};
 			name = Debug;
 		};
-		537EDD1D24F49F1E003DC54A /* Release */ = {
+		537EDD1D24F49F1E003DC54A /* Release configuration for PBXNativeTarget "APSignedAPIClientTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
@@ -569,28 +549,25 @@
 		537EDCFE24F49F1E003DC54A /* Build configuration list for PBXProject "APSignedAPIClient" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				537EDD1624F49F1E003DC54A /* Debug */,
-				537EDD1724F49F1E003DC54A /* Release */,
+				537EDD1624F49F1E003DC54A /* Debug configuration for PBXProject "APSignedAPIClient" */,
+				537EDD1724F49F1E003DC54A /* Release configuration for PBXProject "APSignedAPIClient" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		537EDD1824F49F1E003DC54A /* Build configuration list for PBXNativeTarget "APSignedAPIClient" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				537EDD1924F49F1E003DC54A /* Debug */,
-				537EDD1A24F49F1E003DC54A /* Release */,
+				537EDD1924F49F1E003DC54A /* Debug configuration for PBXNativeTarget "APSignedAPIClient" */,
+				537EDD1A24F49F1E003DC54A /* Release configuration for PBXNativeTarget "APSignedAPIClient" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		537EDD1B24F49F1E003DC54A /* Build configuration list for PBXNativeTarget "APSignedAPIClientTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				537EDD1C24F49F1E003DC54A /* Debug */,
-				537EDD1D24F49F1E003DC54A /* Release */,
+				537EDD1C24F49F1E003DC54A /* Debug configuration for PBXNativeTarget "APSignedAPIClientTests" */,
+				537EDD1D24F49F1E003DC54A /* Release configuration for PBXNativeTarget "APSignedAPIClientTests" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */

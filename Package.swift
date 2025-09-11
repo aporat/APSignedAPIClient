@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "APSignedAPIClient",
     platforms: [
-        .iOS(.v16)
+        .iOS(.v17)
     ],
     products: [
         .library(
@@ -33,5 +33,5 @@ let package = Package(
             path: "Tests"
         )
     ],
-    swiftLanguageVersions: [.v5, .v6]
+    swiftLanguageVersions: [.v5]
 )

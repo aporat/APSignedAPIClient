@@ -1,8 +1,9 @@
 import Alamofire
 import CryptoKit
-import SwiftyJSON
+@preconcurrency import SwiftyJSON
 import Foundation
 import APWebAuthentication
+import HTTPStatusCodes
 
 private enum APIStatusCode: Int {
     case badRequest = 400
@@ -34,12 +35,13 @@ public final class CoreAPIClient {
     }
 
     // MARK: Static config
-    public static var baseURLString = ""
-    private static var appName = ""
-    public static var clientVersion = ""
-    private static var clientId = ""
-    private static var clientKey = ""
-    private static var userAgent = ""
+    // Using nonisolated(unsafe) for static properties to handle Sendable warnings in Swift 6.
+    public nonisolated(unsafe) static var baseURLString = ""
+    private nonisolated(unsafe) static var appName = ""
+    public nonisolated(unsafe) static var clientVersion = ""
+    private nonisolated(unsafe) static var clientId = ""
+    private nonisolated(unsafe) static var clientKey = ""
+    private nonisolated(unsafe) static var userAgent = ""
 
     // MARK: Infra
     private let requestAdapter: CoreAPIRequestAdapter

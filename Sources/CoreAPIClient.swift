@@ -155,8 +155,8 @@ public final class CoreAPIClient {
 
         // Build signature components in a deterministic way
         let components: [String] = [
-            bundleId,
             timestamp,
+            bundleId,
             clientId,
             clientVersion,
             method.rawValue,

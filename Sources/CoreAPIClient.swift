@@ -33,20 +33,19 @@ public final class CoreAPIClient {
         get { requestAdapter.deviceId }
         set { requestAdapter.deviceId = newValue }
     }
-
+    
     // MARK: Static config
-    // Using nonisolated(unsafe) for static properties to handle Sendable warnings in Swift 6.
     public nonisolated(unsafe) static var baseURLString = ""
     private nonisolated(unsafe) static var appName = ""
     public nonisolated(unsafe) static var clientVersion = ""
     private nonisolated(unsafe) static var clientId = ""
     private nonisolated(unsafe) static var clientKey = ""
     private nonisolated(unsafe) static var userAgent = ""
-
+    
     // MARK: Infra
     private let requestAdapter: CoreAPIRequestAdapter
     private let requestRetrier: CoreAPIRequestRetrier
-
+    
     private lazy var sessionManager: Session = {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.httpShouldSetCookies = false
@@ -56,14 +55,14 @@ public final class CoreAPIClient {
             interceptor: Interceptor(adapter: self.requestAdapter, retrier: self.requestRetrier)
         )
     }()
-
+    
     public init() {
         requestAdapter = CoreAPIRequestAdapter()
         requestRetrier  = CoreAPIRequestRetrier()
     }
-
+    
     // MARK: Setup / lifecycle
-
+    
     public class func setup(
         baseURLString: String,
         appName: String,
@@ -79,46 +78,57 @@ public final class CoreAPIClient {
         self.clientKey = clientKey
         self.userAgent = userAgent
     }
-
+    
     public func reset() {
         requestAdapter.reset()
     }
-
+    
     public func cancel() {
         sessionManager.cancelAllRequests()
         requestRetrier.isReloadingCancelled = true
     }
-
-    // MARK: Request (static uses AF, instance uses own Session)
-
-    @discardableResult
-    public class func request(
-        _ path: String,
-        method: HTTPMethod = .get,
-        parameters: Parameters = [:]
-    ) throws -> DataRequest {
-        let urlRequest = try CoreAPIClient.asURLRequest(method: method, path: path, parameters: parameters)
-        return AF.request(urlRequest)
-    }
-
+    
+    // MARK: - Request
+    
     @discardableResult
     public func request(
         _ path: String,
         method: HTTPMethod = .get,
         parameters: Parameters = [:]
-    ) throws -> DataRequest {
+    ) async throws -> JSON {
         let urlRequest = try CoreAPIClient.asURLRequest(method: method, path: path, parameters: parameters)
-        return sessionManager.request(urlRequest)
+        
+        let response = await sessionManager.request(urlRequest)
+            .serializingData()
+            .response
+        
+        if let afError = response.error {
+            throw generateError(from: afError)
+        }
+        
+        guard let httpResponse = response.response, (200...299).contains(httpResponse.statusCode) else {
+            throw generateError(from: response)
+        }
+        
+        guard let data = response.data, !data.isEmpty else {
+            return JSON()
+        }
+        
+        do {
+            return try JSON(data: data)
+        } catch {
+            throw APWebAuthenticationError.failed(reason: "Failed to parse successful JSON response.")
+        }
     }
-
+    
     // MARK: URLRequest building
-
+    
     private enum BuildError: Error {
         case invalidBaseURL
         case missingMethodOrURL
         case missingBundleId
     }
-
+    
     private class func asURLRequest(
         method: HTTPMethod,
         path: String,
@@ -127,32 +137,32 @@ public final class CoreAPIClient {
         guard let baseURL = URL(string: CoreAPIClient.baseURLString) else {
             throw BuildError.invalidBaseURL
         }
-
+        
         var urlRequest = URLRequest(url: baseURL.appendingPathComponent(path))
         urlRequest.method = method
         urlRequest = CoreAPIClient.addSignatureHeaders(urlRequest, params: parameters)
-
+        
         if method == .get {
             return try URLEncoding.default.encode(urlRequest, with: parameters)
         } else {
             return try JSONEncoding.default.encode(urlRequest, with: parameters)
         }
     }
-
+    
     public class func addSignatureHeaders(
         _ urlRequest: URLRequest,
         params: Parameters
     ) -> URLRequest {
         var req = urlRequest
-
+        
         guard
             let method = req.method,
             let url = req.url,
             let bundleId = Bundle.main.bundleIdentifier
         else { return req }
-
+        
         let timestamp = String(Int(Date().timeIntervalSince1970))
-
+        
         // Build signature components in a deterministic way
         let components: [String] = [
             timestamp,
@@ -163,42 +173,42 @@ public final class CoreAPIClient {
             combinedParameters(params),
             url.path
         ]
-
+        
         let signatureParam = components.joined()
         let data = Data(signatureParam.utf8)
-
+        
         if let keyData = clientKey.data(using: .utf8) {
             let key = SymmetricKey(data: keyData)
             let signature = HMAC<SHA256>.authenticationCode(for: data, using: key)
             let hex = signature.map { String(format: "%02x", $0) }.joined()
             req.headers.add(name: "X-Auth-Signature", value: hex)
         }
-
+        
         req.headers.add(name: "X-Auth-Timestamp", value: timestamp)
         req.headers.add(name: "X-Auth-Version", value: clientVersion)
         req.headers.add(name: "X-Auth-Client-ID", value: clientId)
         req.headers.add(name: "X-App-Name", value: appName)
-
+        
         if !userAgent.isEmpty {
             req.headers.add(.userAgent(userAgent))
         }
-
+        
         return req
     }
-
+    
     // MARK: Param encoding for signature
-
+    
     private class func combinedParameters(_ params: Parameters) -> String {
         // Lowercase keys and keep values
         var lowered: [String: Any?] = [:]
         for (k, v) in params { lowered[k.lowercased()] = v }
-
+        
         // Stable sort by key
         let sortedKeys = lowered.keys.sorted()
-
+        
         var parts: [String] = []
         parts.reserveCapacity(sortedKeys.count)
-
+        
         for key in sortedKeys {
             let value = lowered[key] ?? ""
             let encoded = encode(key, value: value)
@@ -206,41 +216,41 @@ public final class CoreAPIClient {
                 parts.append(encoded)
             }
         }
-
+        
         return parts.joined(separator: "&")
     }
-
+    
     private class func encode(_ key: String, value: Any?) -> String {
         let k = key.urlEscaped
-
+        
         switch value {
         case let dict as [String: Any]:
             if dict.isEmpty { return "\(k)=" }
-            if let json = jsonStringStable(dict) { return "\(k)=\(json.urlEscaped)" }
+            if let json = JSON(dict).rawString(options: [.sortedKeys]) { return "\(k)=\(json.urlEscaped)" }
             return "\(k)="
-
+            
         case let array as [Any]:
             if array.isEmpty { return "\(k)=" }
-            if let json = jsonStringStable(array) { return "\(k)=\(json.urlEscaped)" }
+            if let json = JSON(array).rawString(options: [.sortedKeys]) { return "\(k)=\(json.urlEscaped)" }
             return "\(k)="
-
+            
         case let s as String:
             return "\(k)=\(s.urlEscaped)"
-
+            
         case let i as Int:
             return "\(k)=\(i)"
-
+            
         case let i32 as Int32:
             return "\(k)=\(i32)"
-
+            
         case let d as Double:
             // Avoid scientific notation by formatting via String(describing:)
             return "\(k)=\(String(d))"
-
+            
         case let b as Bool:
             // Preserve your original 1/0 convention
             return "\(k)=\(b ? 1 : 0)"
-
+            
         case let n as NSNumber:
             // Fallback for bridged numeric types
             if CFGetTypeID(n) == CFBooleanGetTypeID() {
@@ -248,55 +258,38 @@ public final class CoreAPIClient {
             } else {
                 return "\(k)=\(n.stringValue)"
             }
-
+            
         case .none:
             return "\(k)="
-
+            
         default:
             // Unknown—encode empty to preserve key presence
             return "\(k)="
         }
     }
-
-    /// Produce a stable JSON string (sorted keys) for signing.
-    private class func jsonStringStable(_ obj: Any) -> String? {
-        guard JSONSerialization.isValidJSONObject(obj) else { return nil }
-        // Use sortedKeys to ensure stability across invocations
-        let options: JSONSerialization.WritingOptions = [.sortedKeys]
-        if let data = try? JSONSerialization.data(withJSONObject: obj, options: options) {
-            return String(data: data, encoding: .utf8)
-        }
-        // Fallback to SwiftyJSON if needed (less control over key order)
-        return JSON(obj).rawString(options: [])
-    }
-
+    
     // MARK: - API Errors
-
-    public func generateError(_ dataResponse: DataResponse<JSON, AFError>?) -> APWebAuthenticationError {
+    
+    
+    private func generateError(from response: DataResponse<Data, AFError>) -> APWebAuthenticationError {
         var responseJSON: JSON?
-        if let v = dataResponse?.value {
-            responseJSON = v
-        } else if let data = dataResponse?.data {
+        if let data = response.data {
             responseJSON = JSON(data)
         }
-
-        if responseJSON == nil, dataResponse?.error == nil {
-            return .canceled
-        }
-
-        // Prefer server error_message, then underlying AFError messages
+        
         let errorMessage: String = (
             responseJSON?["error_message"].string ??
-            dataResponse?.error?.asAFError?.underlyingError?.localizedDescription ??
-            dataResponse?.error?.localizedDescription ??
-            NSLocalizedString("Session Expired", comment: "")
+            response.error?.localizedDescription ??
+            HTTPURLResponse.localizedString(forStatusCode: response.response?.statusCode ?? 0)
         )
-
+        
         var code: APIStatusCode = .badRequest
         if let intCode = responseJSON?["error_code"].int, let mapped = APIStatusCode(rawValue: intCode) {
             code = mapped
+        } else if let statusCode = response.response?.statusCode, let mapped = APIStatusCode(rawValue: statusCode) {
+            code = mapped
         }
-
+        
         switch code {
         case .appUpdateRequired:
             return .appUpdateRequired(content: responseJSON)
@@ -313,19 +306,17 @@ public final class CoreAPIClient {
         case .notice, .clientError:
             return .failed(reason: errorMessage)
         default:
-            break
+            return .failed(reason: errorMessage)
         }
-
-        if let err = dataResponse?.error {
-            if err.isCancelledError { return .canceled }
-            if err.isConnectionError {
-                return .connectionError(reason: "Check your network connection. Server could also be down.")
-            }
-            if !err.isIgnorableError {
-                return .failed(reason: errorMessage)
-            }
+    }
+    
+    private func generateError(from afError: AFError) -> APWebAuthenticationError {
+        if afError.isExplicitlyCancelledError {
+            return .canceled
         }
-
-        return .unknown
+        if afError.isSessionTaskError {
+            return .connectionError(reason: "Please check your network connection.")
+        }
+        return .failed(reason: afError.localizedDescription)
     }
 }

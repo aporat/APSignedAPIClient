@@ -4,6 +4,7 @@ import CryptoKit
 import Foundation
 import APWebAuthentication
 import HTTPStatusCodes
+import AlamofireSwiftyJSON
 
 private enum APIStatusCode: Int {
     case badRequest = 400
@@ -95,29 +96,26 @@ public final class CoreAPIClient {
         _ path: String,
         method: HTTPMethod = .get,
         parameters: Parameters = [:]
-    ) async throws -> JSON {
-        let urlRequest = try CoreAPIClient.asURLRequest(method: method, path: path, parameters: parameters)
-        
-        let response = await sessionManager.request(urlRequest)
-            .serializingData()
-            .response
-        
-        if let afError = response.error {
-            throw generateError(from: afError)
-        }
-        
-        guard let httpResponse = response.response, (200...299).contains(httpResponse.statusCode) else {
-            throw generateError(from: response)
-        }
-        
-        guard let data = response.data, !data.isEmpty else {
-            return JSON()
-        }
+    ) async throws(APWebAuthenticationError) -> JSON {
+        let urlRequest: URLRequest
         
         do {
-            return try JSON(data: data)
+            urlRequest = try CoreAPIClient.asURLRequest(method: method, path: path, parameters: parameters)
         } catch {
-            throw APWebAuthenticationError.failed(reason: "Failed to parse successful JSON response.")
+            throw APWebAuthenticationError.failed(reason: "Failed to create URLRequest: \(error.localizedDescription)")
+        }
+        
+        let dataTask = sessionManager.request(urlRequest)
+            .validate()
+            .serializingResponse(using: SwiftyJSONResponseSerializer())
+        
+        let response = await dataTask.response
+        
+        switch response.result {
+        case .success(let value):
+            return value
+        case .failure:
+            throw generateError(from: response)
         }
     }
     
@@ -269,12 +267,19 @@ public final class CoreAPIClient {
     }
     
     // MARK: - API Errors
-    
-    
-    private func generateError(from response: DataResponse<Data, AFError>) -> APWebAuthenticationError {
+    private func generateError<T>(from response: DataResponse<T, AFError>) -> APWebAuthenticationError {
+        if let afError = response.error {
+            if afError.isExplicitlyCancelledError {
+                return .canceled
+            }
+            if afError.isSessionTaskError {
+                return .connectionError(reason: "Please check your network connection.")
+            }
+        }
+        
         var responseJSON: JSON?
         if let data = response.data {
-            responseJSON = JSON(data)
+            responseJSON = try? JSON(data: data)
         }
         
         let errorMessage: String = (
@@ -308,15 +313,5 @@ public final class CoreAPIClient {
         default:
             return .failed(reason: errorMessage)
         }
-    }
-    
-    private func generateError(from afError: AFError) -> APWebAuthenticationError {
-        if afError.isExplicitlyCancelledError {
-            return .canceled
-        }
-        if afError.isSessionTaskError {
-            return .connectionError(reason: "Please check your network connection.")
-        }
-        return .failed(reason: afError.localizedDescription)
     }
 }

@@ -4,7 +4,6 @@ import CryptoKit
 import Foundation
 import APWebAuthentication
 import HTTPStatusCodes
-import AlamofireSwiftyJSON
 
 private enum APIStatusCode: Int {
     case badRequest = 400
@@ -107,7 +106,7 @@ public final class CoreAPIClient {
         
         let dataTask = sessionManager.request(urlRequest)
             .validate()
-            .serializingResponse(using: SwiftyJSONResponseSerializer())
+            .serializingDecodable(JSON.self)
         
         let response = await dataTask.response
         

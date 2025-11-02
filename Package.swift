@@ -16,7 +16,6 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.0.0"),
         .package(path: "../APWebAuthentication"),
-        .package(path: "../AlamofireSwiftyJSON"),
         .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "5.0.0")
     ],
     targets: [
@@ -25,7 +24,6 @@ let package = Package(
             dependencies: [
                 "Alamofire",
                 "APWebAuthentication",
-                "AlamofireSwiftyJSON",
                 "SwiftyJSON"
             ],
             path: "Sources"

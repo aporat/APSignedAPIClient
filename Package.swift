@@ -26,12 +26,13 @@ let package = Package(
                 "APWebAuthentication",
                 "SwiftyJSON"
             ],
-            path: "Sources"
+            resources: [
+                .process("PrivacyInfo.xcprivacy")
+            ]
         ),
         .testTarget(
             name: "APSignedAPIClientTests",
-            dependencies: ["APSignedAPIClient"],
-            path: "Tests"
+            dependencies: ["APSignedAPIClient"]
         )
     ]
 )

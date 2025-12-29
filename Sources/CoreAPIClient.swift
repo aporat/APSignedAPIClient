@@ -7,9 +7,7 @@ import HTTPStatusCodes
 
 public final class CoreAPIClient: Sendable {
     
-    // MARK: - Configuration (Global Mutable State)
-    // We use 'nonisolated(unsafe)' to allow synchronous access without Actor 'await' complexity.
-    // This mimics the behavior of Swift 5 globals.
+    // MARK: - Configuration
     
     public struct Configuration {
         nonisolated(unsafe) public static var baseURLString = ""

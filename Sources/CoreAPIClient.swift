@@ -58,22 +58,22 @@ public final class CoreAPIClient: Sendable {
     
     private let sessionManager: Session
     private let requestAdapter = CoreAPIRequestAdapter()
-    private let requestRetrier = CoreAPIRequestRetrier()
     
     public init() {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.httpShouldSetCookies = false
         
+        let interceptor = Interceptor(adapters: [requestAdapter])
+        
         self.sessionManager = Session(
             configuration: configuration,
             delegate: SessionDelegate(),
-            interceptor: Interceptor(adapter: requestAdapter, retrier: requestRetrier)
+            interceptor: interceptor
         )
     }
     
     public func cancel() {
         sessionManager.cancelAllRequests()
-        requestRetrier.isReloadingCancelled = true
     }
     
     // MARK: - Request
@@ -230,9 +230,9 @@ public final class CoreAPIClient: Sendable {
         }
         
         switch code {
-        case .appUpdateRequired: return .appUpdateRequired(content: responseJSON)
-        case .downloadNewApp: return .appDownloadNewAppRequired(content: responseJSON)
-        case .checkPointRequired: return .appCheckPointRequired(content: responseJSON)
+        case .appUpdateRequired: return .appUpdateRequired(responseJSON: responseJSON)
+        case .downloadNewApp: return .appDownloadNewAppRequired(responseJSON: responseJSON)
+        case .checkPointRequired: return .appCheckPointRequired(responseJSON: responseJSON)
         case .fatalClientError, .invalidAPIToken: return .appSessionExpired(reason: errorMessage)
         case .rateLimit: return .rateLimit(reason: errorMessage)
         case .notFound, .internalServerError: return .serverError(reason: errorMessage)

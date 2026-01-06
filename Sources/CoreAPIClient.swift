@@ -46,8 +46,6 @@ public final class CoreAPIClient: Sendable {
         Configuration.userAgent = userAgent
     }
     
-    // MARK: - Public Token Accessors
-    
     public static func setTokens(account: String?, user: String?, device: String?) {
         if let account { Configuration.accountAuthToken = account }
         if let user { Configuration.userAuthToken = user }
@@ -57,23 +55,22 @@ public final class CoreAPIClient: Sendable {
     // MARK: - Initialization
     
     private let sessionManager: Session
-    private let requestAdapter = CoreAPIRequestAdapter()
+    private let interceptor = CoreAPIInterceptor()
     
     public init() {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.httpShouldSetCookies = false
         
-        let interceptor = Interceptor(adapters: [requestAdapter])
-        
         self.sessionManager = Session(
             configuration: configuration,
             delegate: SessionDelegate(),
-            interceptor: interceptor
+            interceptor: interceptor // Pass directly
         )
     }
     
     public func cancel() {
         sessionManager.cancelAllRequests()
+        interceptor.isReloadingCancelled = true
     }
     
     // MARK: - Request
@@ -106,7 +103,7 @@ public final class CoreAPIClient: Sendable {
         }
     }
     
-    // MARK: - Helpers
+    // MARK: - Helpers (Signature & Encoding)
     
     private enum BuildError: Error { case invalidBaseURL }
     
@@ -117,6 +114,7 @@ public final class CoreAPIClient: Sendable {
         
         var urlRequest = URLRequest(url: baseURL.appendingPathComponent(path))
         urlRequest.method = method
+        
         urlRequest = addSignatureHeaders(urlRequest, params: parameters)
         
         if method == .get {
@@ -137,7 +135,6 @@ public final class CoreAPIClient: Sendable {
         
         let timestamp = String(Int(Date().timeIntervalSince1970))
         
-        // Direct synchronous access to Configuration (Clean!)
         let components: [String] = [
             timestamp,
             bundleId,

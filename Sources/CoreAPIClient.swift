@@ -4,6 +4,7 @@ import CryptoKit
 import Foundation
 import APWebAuthentication
 import HTTPStatusCodes
+import os
 
 public final class CoreAPIClient: Sendable {
     
@@ -17,14 +18,28 @@ public final class CoreAPIClient: Sendable {
         nonisolated(unsafe) public static var clientKey = ""
         nonisolated(unsafe) public static var userAgent = ""
         
-        // Tokens
-        nonisolated(unsafe) public static var accountAuthToken: String?
-        nonisolated(unsafe) public static var userAuthToken: String?
-        nonisolated(unsafe) public static var deviceId: String?
+        private static let tokenLock = OSAllocatedUnfairLock(initialState: (account: String?.none, user: String?.none, device: String?.none))
+        
+        public static var accountAuthToken: String? {
+            get { tokenLock.withLock { $0.account } }
+            set { tokenLock.withLock { $0.account = newValue } }
+        }
+        
+        public static var userAuthToken: String? {
+            get { tokenLock.withLock { $0.user } }
+            set { tokenLock.withLock { $0.user = newValue } }
+        }
+        
+        public static var deviceId: String? {
+            get { tokenLock.withLock { $0.device } }
+            set { tokenLock.withLock { $0.device = newValue } }
+        }
         
         public static func reset() {
-            accountAuthToken = nil
-            userAuthToken = nil
+            tokenLock.withLock { state in
+                state.account = nil
+                state.user = nil
+            }
         }
     }
     

@@ -1,6 +1,7 @@
 import Alamofire
 import Foundation
 import HTTPStatusCodes
+import os
 
 final class CoreAPIInterceptor: RequestInterceptor, @unchecked Sendable {
     
@@ -8,7 +9,12 @@ final class CoreAPIInterceptor: RequestInterceptor, @unchecked Sendable {
     
     private let maxRetryCount: UInt = 5
     
-    var isReloadingCancelled = false
+    private let isReloadingCancelledLock = OSAllocatedUnfairLock(initialState: false)
+    
+    var isReloadingCancelled: Bool {
+        get { isReloadingCancelledLock.withLock { $0 } }
+        set { isReloadingCancelledLock.withLock { $0 = newValue } }
+    }
     
     private let transientURLErrorCodes: Set<URLError.Code> = [
         .timedOut,

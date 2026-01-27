@@ -16,7 +16,8 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.0.0"),
         .package(path: "../APWebAuthentication"),
-        .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "5.0.0")
+        .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "5.0.0"),
+        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "12.0.0")
     ],
     targets: [
         .target(
@@ -24,6 +25,7 @@ let package = Package(
             dependencies: [
                 "Alamofire",
                 "APWebAuthentication",
+                .product(name: "FirebaseAppCheck", package: "firebase-ios-sdk"),
                 "SwiftyJSON"
             ],
             resources: [

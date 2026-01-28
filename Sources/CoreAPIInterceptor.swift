@@ -4,7 +4,7 @@ import HTTPStatusCodes
 import os
 import FirebaseAppCheck
 
-final class CoreAPIInterceptor: RequestInterceptor, @unchecked Sendable {
+final class CoreAPIInterceptor: RequestInterceptor, Sendable {
     
     // MARK: - Properties
     

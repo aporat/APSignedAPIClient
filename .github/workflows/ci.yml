@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Xcode
         uses: maxim-lobanov/setup-xcode@v1
@@ -29,15 +29,6 @@ jobs:
 
       - name: Set Project Scheme
         run: echo "scheme=$(basename ${{ github.repository }})" >> $GITHUB_ENV
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.2
-          bundler-cache: true
-
-      - name: Install Project Gems
-        run: bundle install
 
       - name: Run Tests with Code Coverage
         run: |
@@ -53,14 +44,12 @@ jobs:
       - name: Install xcresultparser
         run: brew install xcresultparser
 
-      - name: Generate Coverage Report (Slather)
+      - name: Generate Coverage Report
         run: |
-          bundle exec slather coverage \
-            --scheme "${{ env.scheme }}" \
-            --output-directory ./coverage \
-            --cobertura-xml \
-            --build-directory ./DerivedData \
-            "./${{ env.scheme }}.xcodeproj"
+          mkdir -p ./coverage
+          xcresultparser \
+            --output-format cobertura \
+            ./TestResults.xcresult > ./coverage/cobertura.xml
 
       - name: Convert Test Results to JUnit
         run: |

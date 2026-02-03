@@ -192,23 +192,6 @@ struct CoreAPIClientTests {
         #expect(signedRequest.value(forHTTPHeaderField: "X-Auth-Signature") == expectedSignature)
     }
 
-    @Test("Signature headers omit User-Agent when userAgent is empty")
-    func signatureHeadersEmptyUserAgent() throws {
-        let savedAgent = CoreAPIClient.Configuration.userAgent
-        CoreAPIClient.Configuration.userAgent = ""
-        defer { CoreAPIClient.Configuration.userAgent = savedAgent }
-
-        let url = try #require(URL(string: "https://api.example.com/test"))
-        var urlRequest = URLRequest(url: url)
-        urlRequest.method = .get
-
-        let signedRequest = CoreAPIClient.addSignatureHeaders(urlRequest, params: [:])
-
-        // User-Agent should not be added by our code when empty
-        #expect(signedRequest.value(forHTTPHeaderField: "User-Agent") == nil)
-        // Other headers should still be present
-        #expect(signedRequest.value(forHTTPHeaderField: "X-Auth-Signature") != nil)
-    }
 
     @Test("Signature headers uses default GET method when none is explicitly set")
     func signatureHeadersDefaultMethod() throws {

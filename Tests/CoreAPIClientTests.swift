@@ -210,17 +210,17 @@ struct CoreAPIClientTests {
         #expect(signedRequest.value(forHTTPHeaderField: "X-Auth-Signature") != nil)
     }
 
-    @Test("Signature headers returns request unchanged when method is nil")
-    func signatureHeadersNoMethod() throws {
+    @Test("Signature headers uses default GET method when none is explicitly set")
+    func signatureHeadersDefaultMethod() throws {
         let url = try #require(URL(string: "https://api.example.com/test"))
         let urlRequest = URLRequest(url: url)
-        // URLRequest has no method set by default (it's nil for Alamofire's .method)
+        // URLRequest defaults to GET
 
         let result = CoreAPIClient.addSignatureHeaders(urlRequest, params: ["key": "value"])
 
-        // Guard should return early — no signature headers added
-        #expect(result.value(forHTTPHeaderField: "X-Auth-Signature") == nil)
-        #expect(result.value(forHTTPHeaderField: "X-Auth-Timestamp") == nil)
+        // Should still sign the request since default method is GET
+        #expect(result.value(forHTTPHeaderField: "X-Auth-Signature") != nil)
+        #expect(result.value(forHTTPHeaderField: "X-Auth-Timestamp") != nil)
     }
 
     // MARK: - Parameter Encoding via Signature

@@ -2,7 +2,7 @@ import Alamofire
 import Foundation
 import HTTPStatusCodes
 import os
-import FirebaseAppCheck
+@preconcurrency import FirebaseAppCheck
 
 final class CoreAPIInterceptor: RequestInterceptor, Sendable {
     

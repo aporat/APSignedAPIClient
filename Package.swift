@@ -25,8 +25,8 @@ let package = Package(
             dependencies: [
                 "Alamofire",
                 .product(name: "FirebaseAppCheck", package: "firebase-ios-sdk"),
-                "SwiftyJSON",
-                "HTTPStatusCodes"
+                .product(name: "HTTPStatusCodes", package: "SwiftHTTPStatusCodes"),
+                "SwiftyJSON"
             ],
             resources: [
                 .process("PrivacyInfo.xcprivacy")

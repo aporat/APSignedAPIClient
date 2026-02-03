@@ -2,9 +2,96 @@ import Alamofire
 import CryptoKit
 @preconcurrency import SwiftyJSON
 import Foundation
-import APWebAuthentication
 import HTTPStatusCodes
 import os
+
+// MARK: - CoreAPIError
+
+/// Errors returned by `CoreAPIClient`.
+///
+/// Every case carries exactly the information a caller needs to react —
+/// nothing more, nothing less.  Cases that include a `responseJSON` payload
+/// do so because the server body contains structured data (e.g. update URLs)
+/// that the caller may need to act on.
+public enum CoreAPIError: Error, LocalizedError {
+    
+    /// The request was explicitly cancelled (e.g. the owning object was deallocated).
+    case canceled
+    /// A network-level failure prevented the request from completing.
+    case connectionError(reason: String)
+    /// The server responded with an error the client does not handle specially.
+    case failed(reason: String)
+    /// The server requires the app to be updated before continuing.
+    case updateRequired(responseJSON: JSON?)
+    /// The server requires the user to download a replacement app.
+    case downloadNewAppRequired(responseJSON: JSON?)
+    /// The server requires a checkpoint/challenge before the request can succeed.
+    case checkPointRequired(responseJSON: JSON?)
+    /// The session is no longer valid (fatal client error or invalid API token).
+    case sessionExpired(reason: String)
+    /// The client has been rate-limited by the server.
+    case rateLimit(reason: String)
+    /// The requested resource was not found or the server encountered an internal error.
+    case serverError(reason: String)
+    
+    // MARK: - LocalizedError
+    
+    public var errorDescription: String? {
+        switch self {
+        case .canceled:
+            return "Request was cancelled."
+        case .connectionError(let reason),
+             .failed(let reason),
+             .sessionExpired(let reason),
+             .rateLimit(let reason),
+             .serverError(let reason):
+            return reason
+        case .updateRequired(let json):
+            return json?["error_message"].string ?? "An app update is required."
+        case .downloadNewAppRequired(let json):
+            return json?["error_message"].string ?? "Please download the latest version of the app."
+        case .checkPointRequired(let json):
+            return json?["error_message"].string ?? "Additional verification is required."
+        }
+    }
+    
+    // MARK: - DisplayableError
+    
+    public var errorTitle: String {
+        switch self {
+        case .canceled:                      return "Cancelled"
+        case .connectionError:               return "Connection Error"
+        case .failed:                        return "Error"
+        case .updateRequired:                return "Update Required"
+        case .downloadNewAppRequired:        return "New Version Available"
+        case .checkPointRequired:            return "Verification Required"
+        case .sessionExpired:                return "Session Expired"
+        case .rateLimit:                     return "Rate Limited"
+        case .serverError:                   return "Server Error"
+        }
+    }
+    
+    public var isIgnorableError: Bool {
+        if case .canceled = self { return true }
+        return false
+    }
+    
+    // MARK: - Helpers
+    
+    /// The raw JSON body returned by the server, when available.
+    public var responseJSON: JSON? {
+        switch self {
+        case .updateRequired(let json),
+             .downloadNewAppRequired(let json),
+             .checkPointRequired(let json):
+            return json
+        default:
+            return nil
+        }
+    }
+}
+
+// MARK: - CoreAPIClient
 
 public final class CoreAPIClient: Sendable {
     
@@ -95,13 +182,13 @@ public final class CoreAPIClient: Sendable {
         _ path: String,
         method: HTTPMethod = .get,
         parameters: Parameters = [:]
-    ) async throws(APWebAuthenticationError) -> JSON {
+    ) async throws(CoreAPIError) -> JSON {
         
         let urlRequest: URLRequest
         do {
             urlRequest = try CoreAPIClient.buildURLRequest(method: method, path: path, parameters: parameters)
         } catch {
-            throw APWebAuthenticationError.failed(reason: "Failed to create URLRequest: \(error.localizedDescription)")
+            throw CoreAPIError.failed(reason: "Failed to create URLRequest: \(error.localizedDescription)")
         }
         
         let dataTask = sessionManager.request(urlRequest)
@@ -219,7 +306,7 @@ public final class CoreAPIClient: Sendable {
         }
     }
     
-    private func generateError<T>(from response: DataResponse<T, AFError>) -> APWebAuthenticationError {
+    private func generateError<T>(from response: DataResponse<T, AFError>) -> CoreAPIError {
         if let afError = response.error {
             if afError.isExplicitlyCancelledError { return .canceled }
             if afError.isSessionTaskError { return .connectionError(reason: "Please check your network connection.") }
@@ -242,10 +329,10 @@ public final class CoreAPIClient: Sendable {
         }
         
         switch code {
-        case .appUpdateRequired: return .appUpdateRequired(responseJSON: responseJSON)
-        case .downloadNewApp: return .appDownloadNewAppRequired(responseJSON: responseJSON)
-        case .checkPointRequired: return .appCheckPointRequired(responseJSON: responseJSON)
-        case .fatalClientError, .invalidAPIToken: return .appSessionExpired(reason: errorMessage)
+        case .updateRequired: return .updateRequired(responseJSON: responseJSON)
+        case .downloadNewApp: return .downloadNewAppRequired(responseJSON: responseJSON)
+        case .checkPointRequired: return .checkPointRequired(responseJSON: responseJSON)
+        case .fatalClientError, .invalidAPIToken: return .sessionExpired(reason: errorMessage)
         case .rateLimit: return .rateLimit(reason: errorMessage)
         case .notFound, .internalServerError: return .serverError(reason: errorMessage)
         case .notice, .clientError: return .failed(reason: errorMessage)
@@ -260,10 +347,19 @@ public final class CoreAPIClient: Sendable {
         case invalidAPIToken = 406
         case notice = 407
         case fatalClientError = 410
-        case appUpdateRequired = 411
+        case updateRequired = 411
         case checkPointRequired = 422
         case rateLimit = 429
         case downloadNewApp = 430
         case internalServerError = 500
+    }
+}
+
+extension String {
+    var urlEscaped: String {
+        let unreserved = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
+        let allowed = CharacterSet(charactersIn: unreserved)
+        
+        return self.addingPercentEncoding(withAllowedCharacters: allowed) ?? self
     }
 }

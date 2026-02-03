@@ -34,7 +34,7 @@ let package = Package(
         ),
         .testTarget(
             name: "APSignedAPIClientTests",
-            dependencies: ["APSignedAPIClient"]
+            dependencies: ["APSignedAPIClient", "Alamofire"]
         )
     ]
 )

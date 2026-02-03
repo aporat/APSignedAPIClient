@@ -231,9 +231,10 @@ public final class CoreAPIClient: Sendable {
         
         guard
             let method = req.method,
-            let url = req.url,
-            let bundleId = Bundle.main.bundleIdentifier
+            let url = req.url
         else { return req }
+
+        let bundleId = Bundle.main.bundleIdentifier ?? ""
         
         let timestamp = String(Int(Date().timeIntervalSince1970))
         

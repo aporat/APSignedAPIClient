@@ -20,7 +20,9 @@ public enum CoreAPIError: Error, LocalizedError {
     /// A network-level failure prevented the request from completing.
     case connectionError(reason: String)
     /// The server responded with an error the client does not handle specially.
-    case failed(reason: String)
+    /// - `errorType`: an optional machine-readable token from the server's `error_type` field
+    ///   (e.g. `"x_account_connection_required"`) that callers can use to take targeted action.
+    case failed(reason: String, errorType: String? = nil)
     /// The server requires the app to be updated before continuing.
     case updateRequired(responseJSON: JSON?)
     /// The server requires the user to download a replacement app.
@@ -41,7 +43,7 @@ public enum CoreAPIError: Error, LocalizedError {
         case .canceled:
             return "Request was cancelled."
         case .connectionError(let reason),
-             .failed(let reason),
+             .failed(let reason, _),
              .sessionExpired(let reason),
              .rateLimit(let reason),
              .serverError(let reason):
@@ -88,6 +90,15 @@ public enum CoreAPIError: Error, LocalizedError {
         default:
             return nil
         }
+    }
+
+    /// A machine-readable error type token returned by the server, when available.
+    ///
+    /// Populated from the server's `error_type` field (e.g. `"x_account_connection_required"`).
+    /// Callers can inspect this to take targeted action without parsing the human-readable message.
+    public var errorType: String? {
+        if case .failed(_, let errorType) = self { return errorType }
+        return nil
     }
 }
 
@@ -322,13 +333,15 @@ public final class CoreAPIClient: Sendable {
             HTTPURLResponse.localizedString(forStatusCode: response.response?.statusCode ?? 0)
         )
         
+        let errorType: String? = responseJSON?["error_type"].string
+
         var code: APIStatusCode = .badRequest
         if let intCode = responseJSON?["error_code"].int, let mapped = APIStatusCode(rawValue: intCode) {
             code = mapped
         } else if let statusCode = response.response?.statusCode, let mapped = APIStatusCode(rawValue: statusCode) {
             code = mapped
         }
-        
+
         switch code {
         case .updateRequired: return .updateRequired(responseJSON: responseJSON)
         case .downloadNewApp: return .downloadNewAppRequired(responseJSON: responseJSON)
@@ -336,8 +349,8 @@ public final class CoreAPIClient: Sendable {
         case .fatalClientError, .invalidAPIToken: return .sessionExpired(reason: errorMessage)
         case .rateLimit: return .rateLimit(reason: errorMessage)
         case .notFound, .internalServerError: return .serverError(reason: errorMessage)
-        case .notice, .clientError: return .failed(reason: errorMessage)
-        default: return .failed(reason: errorMessage)
+        case .notice, .clientError: return .failed(reason: errorMessage, errorType: errorType)
+        default: return .failed(reason: errorMessage, errorType: errorType)
         }
     }
     

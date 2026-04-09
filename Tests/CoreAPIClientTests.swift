@@ -412,6 +412,39 @@ struct CoreAPIClientTests {
         #expect(error.localizedDescription == "Custom reason")
     }
 
+    // MARK: - CoreAPIError errorType
+
+    @Test("errorType returns token when present on failed")
+    func errorTypePresent() {
+        let error = CoreAPIError.failed(reason: "You must connect your X account before using this feature.", errorType: "x_account_connection_required")
+        #expect(error.errorType == "x_account_connection_required")
+    }
+
+    @Test("errorType returns nil when not provided on failed")
+    func errorTypeAbsent() {
+        let error = CoreAPIError.failed(reason: "Something went wrong")
+        #expect(error.errorType == nil)
+    }
+
+    @Test("errorType returns nil for non-failed cases")
+    func errorTypeNonFailed() {
+        #expect(CoreAPIError.canceled.errorType == nil)
+        #expect(CoreAPIError.connectionError(reason: "err").errorType == nil)
+        #expect(CoreAPIError.sessionExpired(reason: "err").errorType == nil)
+        #expect(CoreAPIError.rateLimit(reason: "err").errorType == nil)
+        #expect(CoreAPIError.serverError(reason: "err").errorType == nil)
+        #expect(CoreAPIError.updateRequired(responseJSON: nil).errorType == nil)
+        #expect(CoreAPIError.downloadNewAppRequired(responseJSON: nil).errorType == nil)
+        #expect(CoreAPIError.checkPointRequired(responseJSON: nil).errorType == nil)
+    }
+
+    @Test("failed with errorType still surfaces correct errorDescription")
+    func errorTypeDoesNotAffectDescription() {
+        let error = CoreAPIError.failed(reason: "You must connect your X account before using this feature.", errorType: "x_account_connection_required")
+        #expect(error.errorDescription == "You must connect your X account before using this feature.")
+        #expect(error.errorTitle == "Error")
+    }
+
     // MARK: - String.urlEscaped
 
     @Test("urlEscaped preserves unreserved characters")

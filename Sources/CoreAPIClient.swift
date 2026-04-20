@@ -216,6 +216,42 @@ public final class CoreAPIClient: Sendable {
         }
     }
     
+    // MARK: - Upload
+
+    @discardableResult
+    public func upload(
+        _ path: String,
+        data: Data,
+        fileName: String,
+        mimeType: String
+    ) async throws(CoreAPIError) -> JSON {
+
+        let urlRequest: URLRequest
+        do {
+            urlRequest = try CoreAPIClient.buildURLRequest(method: .post, path: path, parameters: [:])
+        } catch {
+            throw CoreAPIError.failed(reason: "Failed to create URLRequest: \(error.localizedDescription)")
+        }
+
+        let uploadTask = sessionManager.upload(
+            multipartFormData: { multipart in
+                multipart.append(data, withName: "file", fileName: fileName, mimeType: mimeType)
+            },
+            with: urlRequest
+        )
+        .validate()
+        .serializingDecodable(JSON.self)
+
+        let response = await uploadTask.response
+
+        switch response.result {
+        case .success(let value):
+            return value
+        case .failure:
+            throw generateError(from: response)
+        }
+    }
+    
     // MARK: - Helpers (Signature & Encoding)
     
     private enum BuildError: Error { case invalidBaseURL }

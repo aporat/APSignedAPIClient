@@ -335,12 +335,16 @@ public final class CoreAPIClient: Sendable {
         switch value {
         case let dict as [String: Any]:
             if dict.isEmpty { return "\(k)=" }
-            if let json = JSON(dict).rawString(options: [.sortedKeys]) { return "\(k)=\(json.urlEscaped)" }
+            if let json = compactJSONString(dict) { return "\(k)=\(json.urlEscaped)" }
             return "\(k)="
         case let array as [Any]:
             if array.isEmpty { return "\(k)=" }
-            if let json = JSON(array).rawString(options: [.sortedKeys]) { return "\(k)=\(json.urlEscaped)" }
-            return "\(k)="
+            var pairs: [String] = []
+            for (i, element) in array.enumerated() {
+                let encoded = encode("\(key)[\(i)]", value: element)
+                if !encoded.isEmpty { pairs.append(encoded) }
+            }
+            return pairs.joined(separator: "&")
         case let s as String: return "\(k)=\(s.urlEscaped)"
         case let i as Int: return "\(k)=\(i)"
         case let i32 as Int32: return "\(k)=\(i32)"
@@ -352,6 +356,16 @@ public final class CoreAPIClient: Sendable {
         case .none: return "\(k)="
         default: return "\(k)="
         }
+    }
+
+    /// Produces compact JSON with sorted dictionary keys, using `JSONSerialization` directly
+    /// to avoid any conversion quirks from third-party JSON libraries.
+    private static func compactJSONString(_ object: Any) -> String? {
+        guard JSONSerialization.isValidJSONObject(object),
+              let data = try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes]),
+              let string = String(data: data, encoding: .utf8)
+        else { return nil }
+        return string
     }
     
     private func generateError<T>(from response: DataResponse<T, AFError>) -> CoreAPIError {

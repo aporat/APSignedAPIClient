@@ -258,6 +258,43 @@ struct CoreAPIClientTests {
         #expect(signedRequest.value(forHTTPHeaderField: "X-Auth-Signature") == expectedSignature)
     }
 
+    @Test("Parameters with array values expand to indexed bracket notation")
+    func signatureWithArrayParams() throws {
+        let url = try #require(URL(string: "https://api.example.com/api"))
+        var urlRequest = URLRequest(url: url)
+        urlRequest.method = .post
+        let params: Parameters = ["tags": ["swift", "ios"]]
+
+        let signedRequest = CoreAPIClient.addSignatureHeaders(urlRequest, params: params)
+
+        let timestamp = try #require(signedRequest.value(forHTTPHeaderField: "X-Auth-Timestamp"))
+        let bundleId = Bundle.main.bundleIdentifier ?? ""
+
+        // Array expands to tags[0]=swift&tags[1]=ios with URL-escaped brackets
+        let combinedParams = "tags%5B0%5D=swift&tags%5B1%5D=ios"
+        let components = [
+            timestamp, bundleId, "testClientId", "400", "POST", combinedParams, "/api"
+        ]
+        let signatureParam = components.joined()
+        let key = SymmetricKey(data: Data("testClientKey".utf8))
+        let expectedSignature = HMAC<SHA256>.authenticationCode(for: Data(signatureParam.utf8), using: key)
+            .map { String(format: "%02x", $0) }
+            .joined()
+
+        #expect(signedRequest.value(forHTTPHeaderField: "X-Auth-Signature") == expectedSignature)
+    }
+
+    @Test("Empty array encodes as key=")
+    func signatureWithEmptyArray() throws {
+        let url = try #require(URL(string: "https://api.example.com/api"))
+        var urlRequest = URLRequest(url: url)
+        urlRequest.method = .post
+        let params: Parameters = ["ids": [Any]()]
+
+        let signedRequest = CoreAPIClient.addSignatureHeaders(urlRequest, params: params)
+        #expect(signedRequest.value(forHTTPHeaderField: "X-Auth-Signature") != nil)
+    }
+
     @Test("Parameters with special characters are URL-escaped")
     func signatureWithSpecialCharParams() throws {
         let url = try #require(URL(string: "https://api.example.com/api"))

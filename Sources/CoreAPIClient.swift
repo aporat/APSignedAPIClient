@@ -104,8 +104,13 @@ public enum CoreAPIError: Error, LocalizedError {
 
 // MARK: - CoreAPIClient
 
+public enum RequestPriority {
+    case `default`
+    case low
+}
+
 public final class CoreAPIClient: Sendable {
-    
+
     // MARK: - Configuration
     
     public struct Configuration {
@@ -192,12 +197,13 @@ public final class CoreAPIClient: Sendable {
     public func request(
         _ path: String,
         method: HTTPMethod = .get,
-        parameters: Parameters = [:]
+        parameters: Parameters = [:],
+        priority: RequestPriority = .default
     ) async throws(CoreAPIError) -> JSON {
-        
+
         let urlRequest: URLRequest
         do {
-            urlRequest = try CoreAPIClient.buildURLRequest(method: method, path: path, parameters: parameters)
+            urlRequest = try CoreAPIClient.buildURLRequest(method: method, path: path, parameters: parameters, priority: priority)
         } catch {
             throw CoreAPIError.failed(reason: "Failed to create URLRequest: \(error.localizedDescription)")
         }
@@ -256,14 +262,18 @@ public final class CoreAPIClient: Sendable {
     
     private enum BuildError: Error { case invalidBaseURL }
     
-    private static func buildURLRequest(method: HTTPMethod, path: String, parameters: Parameters) throws -> URLRequest {
+    private static func buildURLRequest(method: HTTPMethod, path: String, parameters: Parameters, priority: RequestPriority = .default) throws -> URLRequest {
         guard let baseURL = URL(string: Configuration.baseURLString) else {
             throw BuildError.invalidBaseURL
         }
-        
+
         var urlRequest = URLRequest(url: baseURL.appendingPathComponent(path))
         urlRequest.method = method
-        
+
+        if priority == .low {
+            urlRequest.networkServiceType = .background
+        }
+
         urlRequest = addSignatureHeaders(urlRequest, params: parameters)
         
         if method == .get {

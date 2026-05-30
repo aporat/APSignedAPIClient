@@ -174,21 +174,27 @@ public final class CoreAPIClient: Sendable {
     
     private let sessionManager: Session
     private let interceptor = CoreAPIInterceptor()
-    
+    private let transientRetrier = TransientNetworkRetrier()
+
     public init() {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.httpShouldSetCookies = false
-        
+        configuration.waitsForConnectivity = true
+        configuration.timeoutIntervalForRequest = 30
+        configuration.timeoutIntervalForResource = 60
+
+        let composed = Interceptor(adapters: [interceptor], retriers: [transientRetrier])
+
         self.sessionManager = Session(
             configuration: configuration,
             delegate: SessionDelegate(),
-            interceptor: interceptor // Pass directly
+            interceptor: composed
         )
     }
-    
+
     public func cancel() {
         sessionManager.cancelAllRequests()
-        interceptor.isReloadingCancelled = true
+        transientRetrier.isReloadingCancelled = true
     }
     
     // MARK: - Request

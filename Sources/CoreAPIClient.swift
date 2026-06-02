@@ -235,18 +235,31 @@ public final class CoreAPIClient: Sendable {
         _ path: String,
         data: Data,
         fileName: String,
-        mimeType: String
+        mimeType: String,
+        parameters: Parameters = [:]
     ) async throws(CoreAPIError) -> JSON {
 
-        let urlRequest: URLRequest
-        do {
-            urlRequest = try CoreAPIClient.buildURLRequest(method: .post, path: path, parameters: [:])
-        } catch {
-            throw CoreAPIError.failed(reason: "Failed to create URLRequest: \(error.localizedDescription)")
+        guard let baseURL = URL(string: Configuration.baseURLString) else {
+            throw CoreAPIError.failed(reason: "Invalid base URL")
         }
+
+        var urlRequest = URLRequest(url: baseURL.appendingPathComponent(path))
+        urlRequest.method = .post
+        urlRequest = CoreAPIClient.addSignatureHeaders(urlRequest, params: parameters)
 
         let uploadTask = sessionManager.upload(
             multipartFormData: { multipart in
+                for (key, value) in parameters {
+                    let stringValue: String
+                    switch value {
+                    case let s as String: stringValue = s
+                    case let b as Bool: stringValue = b ? "1" : "0"
+                    default: stringValue = "\(value)"
+                    }
+                    if let fieldData = stringValue.data(using: .utf8) {
+                        multipart.append(fieldData, withName: key)
+                    }
+                }
                 multipart.append(data, withName: "file", fileName: fileName, mimeType: mimeType)
             },
             with: urlRequest

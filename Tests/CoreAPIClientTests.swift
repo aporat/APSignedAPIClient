@@ -289,7 +289,7 @@ struct CoreAPIClientTests {
         let url = try #require(URL(string: "https://api.example.com/api"))
         var urlRequest = URLRequest(url: url)
         urlRequest.method = .post
-        let params: Parameters = ["ids": [Any]()]
+        let params: Parameters = ["ids": [String]()]
 
         let signedRequest = CoreAPIClient.addSignatureHeaders(urlRequest, params: params)
         #expect(signedRequest.value(forHTTPHeaderField: "X-Auth-Signature") != nil)

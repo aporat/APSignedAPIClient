@@ -8,7 +8,7 @@ import os
 /// so retries span real-world network handoffs (e.g. WiFi ↔ cellular).
 final class TransientNetworkRetrier: RequestRetrier, Sendable {
 
-    private let maxRetryCount: UInt = 5
+    private let maxRetryCount: UInt = 1
 
     private let isReloadingCancelledLock = OSAllocatedUnfairLock(initialState: false)
 
@@ -32,9 +32,9 @@ final class TransientNetworkRetrier: RequestRetrier, Sendable {
         }
 
         if shouldRetryRequest(error, request: request) {
-            // Exponential backoff: 0.5, 1, 2, 4, 8 — spans ~15s to cover WiFi↔cell handoffs.
-            let delay = min(pow(2.0, Double(request.retryCount)) * 0.5, 8.0)
-            completion(.retryWithDelay(delay))
+            // Single 0.5s delay before the one retry — keeps the overall failure window
+            // inside the resource timeout so users get a prompt error.
+            completion(.retryWithDelay(0.5))
         } else {
             completion(.doNotRetry)
         }

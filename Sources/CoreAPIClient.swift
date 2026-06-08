@@ -121,6 +121,13 @@ public final class CoreAPIClient: Sendable {
         nonisolated(unsafe) public static var clientKey = ""
         nonisolated(unsafe) public static var userAgent = ""
         
+        /// Reports whether the device currently has network connectivity.
+        /// When this returns `false`, requests fail immediately with `.connectionError`
+        /// instead of waiting for a URLSession timeout. Defaults to always-reachable so
+        /// the client works out of the box; wire this to a real reachability source at
+        /// app startup (e.g. `NWPathMonitor`).
+        nonisolated(unsafe) public static var isReachable: @Sendable () -> Bool = { true }
+
         private static let tokenLock = OSAllocatedUnfairLock(initialState: (account: String?.none, user: String?.none, device: String?.none))
         
         public static var accountAuthToken: String? {
@@ -180,8 +187,8 @@ public final class CoreAPIClient: Sendable {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.httpShouldSetCookies = false
         configuration.waitsForConnectivity = true
-        configuration.timeoutIntervalForRequest = 30
-        configuration.timeoutIntervalForResource = 60
+        configuration.timeoutIntervalForRequest = 15
+        configuration.timeoutIntervalForResource = 20
 
         let composed = Interceptor(adapters: [interceptor], retriers: [transientRetrier])
 
@@ -206,6 +213,10 @@ public final class CoreAPIClient: Sendable {
         parameters: Parameters = [:],
         priority: RequestPriority = .default
     ) async throws(CoreAPIError) -> JSON {
+
+        guard Configuration.isReachable() else {
+            throw CoreAPIError.connectionError(reason: "Please check your network connection.")
+        }
 
         let urlRequest: URLRequest
         do {
@@ -238,6 +249,10 @@ public final class CoreAPIClient: Sendable {
         mimeType: String,
         parameters: Parameters = [:]
     ) async throws(CoreAPIError) -> JSON {
+
+        guard Configuration.isReachable() else {
+            throw CoreAPIError.connectionError(reason: "Please check your network connection.")
+        }
 
         guard let baseURL = URL(string: Configuration.baseURLString) else {
             throw CoreAPIError.failed(reason: "Invalid base URL")

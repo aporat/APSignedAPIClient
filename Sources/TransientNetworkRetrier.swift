@@ -3,9 +3,10 @@ import Foundation
 import HTTPStatusCodes
 import os
 
-/// Retries requests on transient network failures (timeouts, DNS, dropped
-/// connections) and select retryable HTTP responses. Uses exponential backoff
-/// so retries span real-world network handoffs (e.g. WiFi ↔ cellular).
+/// Retries requests once on transient network failures (timeouts, DNS, dropped
+/// connections) and on retryable 5xx responses. 5xx retries are limited to
+/// idempotent methods: a non-idempotent request that reached the server may
+/// have been partially processed, so replaying it risks duplicating the operation.
 final class TransientNetworkRetrier: RequestRetrier, Sendable {
 
     private let maxRetryCount: UInt = 1
@@ -31,7 +32,7 @@ final class TransientNetworkRetrier: RequestRetrier, Sendable {
             return
         }
 
-        if shouldRetryRequest(error, request: request) {
+        if shouldRetry(error: error, statusCode: request.response?.statusCode, method: request.request?.method) {
             // Single 0.5s delay before the one retry — keeps the overall failure window
             // inside the resource timeout so users get a prompt error.
             completion(.retryWithDelay(0.5))
@@ -40,7 +41,7 @@ final class TransientNetworkRetrier: RequestRetrier, Sendable {
         }
     }
 
-    private func shouldRetryRequest(_ error: (any Error)?, request: Request?) -> Bool {
+    func shouldRetry(error: (any Error)?, statusCode: Int?, method: HTTPMethod?) -> Bool {
         if isReloadingCancelled { return false }
 
         if let urlErr = extractURLError(from: error), transientURLErrorCodes.contains(urlErr.code) {
@@ -51,18 +52,25 @@ final class TransientNetworkRetrier: RequestRetrier, Sendable {
             return true
         }
 
-        if let status = request?.response?.statusCodeValue {
-            switch HTTPStatusCode(rawValue: status.rawValue) {
-            case .notFound, .gone: // 404, 410
-                return true
+        if let statusCode {
+            switch HTTPStatusCode(rawValue: statusCode) {
             case .internalServerError, .notImplemented, .badGateway, .serviceUnavailable, .gatewayTimeout: // 5xx
-                return true
+                return isIdempotent(method)
             default:
                 break
             }
         }
 
         return false
+    }
+
+    private func isIdempotent(_ method: HTTPMethod?) -> Bool {
+        switch method {
+        case .get, .head, .options, .trace, .put, .delete:
+            return true
+        default:
+            return false
+        }
     }
 
     private func extractURLError(from error: (any Error)?) -> URLError? {

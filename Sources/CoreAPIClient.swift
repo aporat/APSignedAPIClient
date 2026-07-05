@@ -218,6 +218,9 @@ public final class CoreAPIClient: Sendable {
             throw CoreAPIError.connectionError(reason: "Please check your network connection.")
         }
 
+        // A prior cancel() only applies to requests in flight at that time.
+        transientRetrier.isReloadingCancelled = false
+
         let urlRequest: URLRequest
         do {
             urlRequest = try CoreAPIClient.buildURLRequest(method: method, path: path, parameters: parameters, priority: priority)
@@ -253,6 +256,9 @@ public final class CoreAPIClient: Sendable {
         guard Configuration.isReachable() else {
             throw CoreAPIError.connectionError(reason: "Please check your network connection.")
         }
+
+        // A prior cancel() only applies to requests in flight at that time.
+        transientRetrier.isReloadingCancelled = false
 
         guard let baseURL = URL(string: Configuration.baseURLString) else {
             throw CoreAPIError.failed(reason: "Invalid base URL")
@@ -390,10 +396,9 @@ public final class CoreAPIClient: Sendable {
             }
             return pairs.joined(separator: "&")
         case let s as String: return "\(k)=\(s.urlEscaped)"
-        case let i as Int: return "\(k)=\(i)"
-        case let i32 as Int32: return "\(k)=\(i32)"
-        case let d as Double: return "\(k)=\(String(d))"
         case let b as Bool: return "\(k)=\(b ? 1 : 0)"
+        case let i as any BinaryInteger: return "\(k)=\(i)"
+        case let f as any BinaryFloatingPoint: return "\(k)=\(f)"
         case let n as NSNumber:
             if CFGetTypeID(n) == CFBooleanGetTypeID() { return "\(k)=\(n.boolValue ? 1 : 0)" }
             else { return "\(k)=\(n.stringValue)" }

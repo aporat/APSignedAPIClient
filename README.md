@@ -1,6 +1,6 @@
 # APSignedAPIClient
 
-[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Faporat%2FAAPSignedAPIClient%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/aporat/APSignedAPIClient)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Faporat%2FAPSignedAPIClient%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/aporat/APSignedAPIClient)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Faporat%2FAPSignedAPIClient%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/aporat/APSignedAPIClient)
 ![GitHub Actions Workflow Status](https://github.com/aporat/APSignedAPIClient/actions/workflows/ci.yml/badge.svg)
 [![codecov](https://codecov.io/github/aporat/APSignedAPIClient/graph/badge.svg?token=OHF9AE0KMC)](https://codecov.io/github/aporat/APSignedAPIClient)
@@ -8,16 +8,17 @@
 `APSignedAPIClient` is a Swift package for making signed API requests with HMAC-SHA256 authentication. It provides a flexible, reusable client for iOS applications, leveraging Alamofire for networking. This package is designed to simplify secure API communication by handling request signing, authentication tokens, and error handling out of the box.
 
 ## Features
-- **Signed Requests**: Automatically signs requests with HMAC-SHA256 using a client key.
-- **Authentication**: Supports account and user authentication tokens, plus device ID headers.
+- **Signed Requests**: Automatically signs requests with HMAC-SHA256 (CryptoKit) using a client key.
+- **Authentication**: Supports account and user authentication tokens, device ID headers, and Firebase App Check tokens.
 - **Configurable**: Set base URL, app name, client version, and more via a single setup call.
-- **Error Handling**: Maps API-specific status codes to meaningful errors using `APWebAuthentication`.
-- **Retry Logic**: Includes a retrier for transient network failures and server errors.
+- **Typed Errors**: Maps API-specific status codes to `CoreAPIError` cases (session expired, rate limited, update required, and more).
+- **Retry Logic**: Automatically retries transient network failures and retryable server errors once with a short delay.
+- **Uploads**: Multipart file uploads with the same signing and error handling.
 
 ## Requirements
-- iOS 16.0+
-- Swift 5.9+
-- Xcode 15.0+
+- iOS 18.0+
+- Swift 6.0+
+- Xcode 16.0+
 
 ## Installation
 
@@ -52,7 +53,7 @@ Then, include it in your target:
 ## Usage
 
 ### Setup
-Configure the client with your API credentials and settings:
+Configure the client once at app startup with your API credentials and settings:
 
 ```swift
 import APSignedAPIClient
@@ -65,37 +66,70 @@ CoreAPIClient.setup(
     clientKey: "your-client-key",
     userAgent: "MyApp/1.0"
 )
+
+// Optional: attach auth tokens once you have them.
+CoreAPIClient.setTokens(account: "account-token", user: "user-token", device: "device-id")
+
+// Optional: wire up reachability so requests fail fast when offline
+// (defaults to always reachable).
+CoreAPIClient.Configuration.isReachable = { /* e.g. read from NWPathMonitor */ true }
 ```
 
+Requests also carry a Firebase App Check token when available, so configure [App Check](https://firebase.google.com/docs/app-check) during your app's Firebase setup.
+
 ### Making a Request
-Create an instance of `CoreAPIClient` and send a signed request:
+Create an instance of `CoreAPIClient` and await a signed request. Responses are returned as SwiftyJSON `JSON`, and failures are thrown as `CoreAPIError`:
 
 ```swift
 let client = CoreAPIClient()
 
 do {
-    let request = try client.request(
-    "/endpoint",
-    method: .post,
-    parameters: ["key": "value"]
-)
-
-request.responseData { response in
-    switch response.result {
-        case .success(let data):
-            print("Response: \(data)")
-        case .failure(let error):
-            print("Error: \(client.generateError(response))")
-        }
-    }
+    let json = try await client.request(
+        "/endpoint",
+        method: .post,
+        parameters: ["key": "value"]
+    )
+    print("Response: \(json)")
 } catch {
-    print("Request creation failed: \(error)")
+    print("\(error.errorTitle): \(error.localizedDescription)")
 }
 ```
 
+### Uploading a File
+
+```swift
+let json = try await client.upload(
+    "/photos",
+    data: imageData,
+    fileName: "photo.jpg",
+    mimeType: "image/jpeg",
+    parameters: ["caption": "Hello"]
+)
+```
+
+### Handling Errors
+`CoreAPIError` distinguishes the cases callers typically need to act on:
+
+```swift
+do {
+    let json = try await client.request("/endpoint")
+} catch CoreAPIError.sessionExpired {
+    // Log the user out.
+} catch CoreAPIError.updateRequired(let responseJSON) {
+    // Prompt for an app update; responseJSON may contain an update URL.
+} catch {
+    guard !error.isIgnorableError else { return } // e.g. cancelled requests
+    print("\(error.errorTitle): \(error.localizedDescription)")
+}
+```
+
+### Cancelling
+`client.cancel()` cancels all in-flight requests (they fail with `CoreAPIError.canceled`).
+
 ## Dependencies
 - [Alamofire](https://github.com/Alamofire/Alamofire) (5.0.0+): Networking
-- [CryptoSwift](https://github.com/krzyzanowskim/CryptoSwift) (1.8.0+): HMAC-SHA256 signing
-- [APWebAuthentication](https://github.com/aporat/APWebAuthentication): Error types
-- [SwiftyUserDefaults](https://github.com/sunshinejr/SwiftyUserDefaults) (5.0.0+): User defaults (optional)
 - [SwiftyJSON](https://github.com/SwiftyJSON/SwiftyJSON) (5.0.0+): JSON parsing
+- [firebase-ios-sdk](https://github.com/firebase/firebase-ios-sdk) (12.0.0+): Firebase App Check tokens
+- [SwiftHTTPStatusCodes](https://github.com/rhodgkins/SwiftHTTPStatusCodes) (3.3.0+): HTTP status code handling
+
+HMAC-SHA256 signing uses Apple's built-in [CryptoKit](https://developer.apple.com/documentation/cryptokit) — no third-party crypto dependency.

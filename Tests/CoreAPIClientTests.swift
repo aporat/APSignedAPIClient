@@ -232,6 +232,32 @@ struct CoreAPIClientTests {
         #expect(signedRequest.value(forHTTPHeaderField: "X-Auth-Signature") == expectedSignature)
     }
 
+    @Test("Parameters with Int64, UInt, and Float values encode their decimal value")
+    func signatureWithOtherNumericParams() throws {
+        let url = try #require(URL(string: "https://api.example.com/api"))
+        var urlRequest = URLRequest(url: url)
+        urlRequest.method = .get
+        let params: Parameters = ["big": Int64(9_007_199_254_740_993), "count": UInt(7), "ratio": Float(1.5)]
+
+        let signedRequest = CoreAPIClient.addSignatureHeaders(urlRequest, params: params)
+
+        let timestamp = try #require(signedRequest.value(forHTTPHeaderField: "X-Auth-Timestamp"))
+        let bundleId = Bundle.main.bundleIdentifier ?? ""
+
+        // Keys sorted: big, count, ratio
+        let combinedParams = "big=9007199254740993&count=7&ratio=1.5"
+        let components = [
+            timestamp, bundleId, "testClientId", "400", "GET", combinedParams, "/api"
+        ]
+        let signatureParam = components.joined()
+        let key = SymmetricKey(data: Data("testClientKey".utf8))
+        let expectedSignature = HMAC<SHA256>.authenticationCode(for: Data(signatureParam.utf8), using: key)
+            .map { String(format: "%02x", $0) }
+            .joined()
+
+        #expect(signedRequest.value(forHTTPHeaderField: "X-Auth-Signature") == expectedSignature)
+    }
+
     @Test("Parameters with boolean values encode as 0/1")
     func signatureWithBoolParams() throws {
         let url = try #require(URL(string: "https://api.example.com/api"))

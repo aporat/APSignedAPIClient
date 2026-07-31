@@ -425,6 +425,18 @@ struct CoreAPIClientTests {
         #expect(CoreAPIError.serverError(reason: "").errorTitle == "Server Error")
     }
 
+    @Test("Server-provided error_title overrides the default errorTitle")
+    func serverProvidedErrorTitle() {
+        let json = JSON(["error_title": "User Not Found"])
+        #expect(CoreAPIError.failed(reason: "", title: "User Not Found").errorTitle == "User Not Found")
+        #expect(CoreAPIError.sessionExpired(reason: "", title: "Signed Out").errorTitle == "Signed Out")
+        #expect(CoreAPIError.rateLimit(reason: "", title: "Slow Down").errorTitle == "Slow Down")
+        #expect(CoreAPIError.serverError(reason: "", title: "User Not Found").errorTitle == "User Not Found")
+        #expect(CoreAPIError.updateRequired(responseJSON: json).errorTitle == "User Not Found")
+        #expect(CoreAPIError.downloadNewAppRequired(responseJSON: json).errorTitle == "User Not Found")
+        #expect(CoreAPIError.checkPointRequired(responseJSON: json).errorTitle == "User Not Found")
+    }
+
     // MARK: - CoreAPIError isIgnorableError
 
     @Test("Only canceled error is ignorable")

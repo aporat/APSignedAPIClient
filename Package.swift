@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "APSignedAPIClient",
     platforms: [
-        .iOS(.v18)
+        .iOS(.v17)
     ],
     products: [
         .library(

@@ -9,7 +9,7 @@
 
 ## Features
 - **Signed Requests**: Automatically signs requests with HMAC-SHA256 (CryptoKit) using a client key.
-- **Authentication**: Supports account and user authentication tokens, device ID headers, and Firebase App Check tokens.
+- **Authentication**: Supports an account authentication token, device ID headers, and Firebase App Check tokens.
 - **Configurable**: Set base URL, app name, client version, and more via a single setup call.
 - **Typed Errors**: Maps API-specific status codes to `CoreAPIError` cases (session expired, rate limited, update required, and more).
 - **Retry Logic**: Automatically retries transient network failures and retryable server errors once with a short delay.
@@ -68,7 +68,7 @@ CoreAPIClient.setup(
 )
 
 // Optional: attach auth tokens once you have them.
-CoreAPIClient.setTokens(account: "account-token", user: "user-token", device: "device-id")
+CoreAPIClient.setTokens(account: "account-token", device: "device-id")
 
 // Optional: wire up reachability so requests fail fast when offline
 // (defaults to always reachable).

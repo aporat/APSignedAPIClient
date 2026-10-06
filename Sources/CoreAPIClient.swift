@@ -130,16 +130,11 @@ public final class CoreAPIClient: Sendable {
         /// app startup (e.g. `NWPathMonitor`).
         nonisolated(unsafe) public static var isReachable: @Sendable () -> Bool = { true }
 
-        private static let tokenLock = OSAllocatedUnfairLock(initialState: (account: String?.none, user: String?.none, device: String?.none))
+        private static let tokenLock = OSAllocatedUnfairLock(initialState: (account: String?.none, device: String?.none))
         
         public static var accountAuthToken: String? {
             get { tokenLock.withLock { $0.account } }
             set { tokenLock.withLock { $0.account = newValue } }
-        }
-        
-        public static var userAuthToken: String? {
-            get { tokenLock.withLock { $0.user } }
-            set { tokenLock.withLock { $0.user = newValue } }
         }
         
         public static var deviceId: String? {
@@ -150,7 +145,6 @@ public final class CoreAPIClient: Sendable {
         public static func reset() {
             tokenLock.withLock { state in
                 state.account = nil
-                state.user = nil
             }
         }
     }
@@ -173,9 +167,8 @@ public final class CoreAPIClient: Sendable {
         Configuration.userAgent = userAgent
     }
     
-    public static func setTokens(account: String?, user: String?, device: String?) {
+    public static func setTokens(account: String?, device: String?) {
         if let account { Configuration.accountAuthToken = account }
-        if let user { Configuration.userAuthToken = user }
         if let device { Configuration.deviceId = device }
     }
     

@@ -31,37 +31,32 @@ struct CoreAPIClientTests {
         #expect(CoreAPIClient.Configuration.userAgent == "TestApp/1.0")
     }
 
-    @Test("setTokens sets account, user, and device tokens")
+    @Test("setTokens sets account token and device id")
     func setTokens() {
-        CoreAPIClient.setTokens(account: "acct-token", user: "user-token", device: "device-123")
+        CoreAPIClient.setTokens(account: "acct-token", device: "device-123")
         #expect(CoreAPIClient.Configuration.accountAuthToken == "acct-token")
-        #expect(CoreAPIClient.Configuration.userAuthToken == "user-token")
         #expect(CoreAPIClient.Configuration.deviceId == "device-123")
     }
 
     @Test("setTokens with nil values does not overwrite existing tokens")
     func setTokensNilPreservesExisting() {
         CoreAPIClient.Configuration.accountAuthToken = "existing-acct"
-        CoreAPIClient.Configuration.userAuthToken = "existing-user"
         CoreAPIClient.Configuration.deviceId = "existing-device"
 
-        CoreAPIClient.setTokens(account: nil, user: nil, device: nil)
+        CoreAPIClient.setTokens(account: nil, device: nil)
 
         #expect(CoreAPIClient.Configuration.accountAuthToken == "existing-acct")
-        #expect(CoreAPIClient.Configuration.userAuthToken == "existing-user")
         #expect(CoreAPIClient.Configuration.deviceId == "existing-device")
     }
 
-    @Test("reset clears account and user tokens")
+    @Test("reset clears the account token")
     func resetTokens() {
         CoreAPIClient.Configuration.accountAuthToken = "acct"
-        CoreAPIClient.Configuration.userAuthToken = "user"
         CoreAPIClient.Configuration.deviceId = "device"
 
         CoreAPIClient.Configuration.reset()
 
         #expect(CoreAPIClient.Configuration.accountAuthToken == nil)
-        #expect(CoreAPIClient.Configuration.userAuthToken == nil)
         // reset does not clear deviceId
         #expect(CoreAPIClient.Configuration.deviceId == "device")
     }

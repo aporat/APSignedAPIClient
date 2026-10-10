@@ -18,6 +18,14 @@ struct TransientNetworkRetrierTests {
         #expect(retrier.shouldRetry(error: URLError(.networkConnectionLost), statusCode: nil, method: .post))
     }
 
+    @Test("A zero retry count never retries, even transient errors")
+    func zeroRetryCountNeverRetries() {
+        let retrier = TransientNetworkRetrier(maxRetryCount: 0)
+        #expect(!retrier.shouldRetry(error: URLError(.timedOut), statusCode: nil, method: .post))
+        #expect(!retrier.shouldRetry(error: URLError(.networkConnectionLost), statusCode: nil, method: .get))
+        #expect(!retrier.shouldRetry(error: nil, statusCode: 503, method: .get))
+    }
+
     @Test("Does not retry non-transient URL errors")
     func doesNotRetryOtherURLErrors() {
         let retrier = TransientNetworkRetrier()

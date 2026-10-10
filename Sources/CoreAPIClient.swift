@@ -176,14 +176,28 @@ public final class CoreAPIClient: Sendable {
     
     private let sessionManager: Session
     private let interceptor = CoreAPIInterceptor()
-    private let transientRetrier = TransientNetworkRetrier()
+    private let transientRetrier: TransientNetworkRetrier
 
-    public init() {
+    /// - Parameters:
+    ///   - requestTimeout: seconds a request may go without receiving any data before it fails
+    ///     (`timeoutIntervalForRequest`). The server sends nothing until it has an answer, so this
+    ///     is the effective limit on how long one call may take to produce a response.
+    ///   - resourceTimeout: seconds the whole transfer may take (`timeoutIntervalForResource`).
+    ///   - retriesTransientFailures: whether a timeout, dropped connection or retryable 5xx is
+    ///     replayed once automatically. Pass `false` when a replay could repeat expensive,
+    ///     non-idempotent work (e.g. LLM generation), so the caller surfaces the failure and the
+    ///     user decides.
+    ///
+    /// The defaults suit ordinary API calls. Long-running work belongs on a client of its own with
+    /// longer limits, so the rest of an app's requests still fail promptly.
+    public init(requestTimeout: TimeInterval = 15, resourceTimeout: TimeInterval = 20, retriesTransientFailures: Bool = true) {
+        transientRetrier = TransientNetworkRetrier(maxRetryCount: retriesTransientFailures ? 1 : 0)
+
         let configuration = URLSessionConfiguration.ephemeral
         configuration.httpShouldSetCookies = false
         configuration.waitsForConnectivity = true
-        configuration.timeoutIntervalForRequest = 15
-        configuration.timeoutIntervalForResource = 20
+        configuration.timeoutIntervalForRequest = requestTimeout
+        configuration.timeoutIntervalForResource = resourceTimeout
 
         let composed = Interceptor(adapters: [interceptor], retriers: [transientRetrier])
 

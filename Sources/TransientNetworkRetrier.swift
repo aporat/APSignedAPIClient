@@ -9,7 +9,13 @@ import os
 /// have been partially processed, so replaying it risks duplicating the operation.
 final class TransientNetworkRetrier: RequestRetrier, Sendable {
 
-    private let maxRetryCount: UInt = 1
+    private let maxRetryCount: UInt
+
+    /// `maxRetryCount` 0 installs the retrier without ever replaying a request, for sessions
+    /// whose calls are expensive or non-idempotent enough that a retry must be the user's call.
+    init(maxRetryCount: UInt = 1) {
+        self.maxRetryCount = maxRetryCount
+    }
 
     private let isReloadingCancelledLock = OSAllocatedUnfairLock(initialState: false)
 
@@ -42,7 +48,7 @@ final class TransientNetworkRetrier: RequestRetrier, Sendable {
     }
 
     func shouldRetry(error: (any Error)?, statusCode: Int?, method: HTTPMethod?) -> Bool {
-        if isReloadingCancelled { return false }
+        if maxRetryCount == 0 || isReloadingCancelled { return false }
 
         if let urlErr = extractURLError(from: error), transientURLErrorCodes.contains(urlErr.code) {
             return true

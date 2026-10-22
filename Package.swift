@@ -16,7 +16,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.0.0"),
         .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "5.0.0"),
-        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "12.0.0"),
+        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", "12.0.0" ..< "14.0.0"),
         .package(url: "https://github.com/rhodgkins/SwiftHTTPStatusCodes.git", from: "3.3.0")
     ],
     targets: [

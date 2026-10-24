@@ -25,14 +25,34 @@ final class CoreAPIInterceptor: RequestAdapter, Sendable {
                 req.headers.update(.init(name: Header.deviceID, value: id))
             }
 
-            do {
-                let token = try await AppCheck.appCheck().token(forcingRefresh: false)
-                req.headers.update(.init(name: Header.appCheck, value: token.token))
-            } catch {
-            //    print("Failed to get App Check token: \(error)")
+            if let token = await Self.appCheckToken() {
+                req.headers.update(.init(name: Header.appCheck, value: token))
             }
 
             completion(.success(req))
+        }
+    }
+
+    // MARK: - App Check
+
+    /// How long a request waits for an App Check token before it goes out without the header.
+    private static let appCheckTimeout: Duration = .seconds(3)
+
+    /// The App Check token, or `nil` on failure or after `appCheckTimeout`. When Firebase can't be
+    /// reached the fetch hangs for minutes and ignores cancellation, so it is raced against a
+    /// sleep rather than run in a task group (which would wait for it anyway).
+    @MainActor
+    private static func appCheckToken() async -> String? {
+        @MainActor final class Once { var resumed = false }
+        let once = Once()
+        return await withCheckedContinuation { (continuation: CheckedContinuation<String?, Never>) in
+            @MainActor func resume(_ token: String?) {
+                guard !once.resumed else { return }
+                once.resumed = true
+                continuation.resume(returning: token)
+            }
+            Task { @MainActor in resume(try? await AppCheck.appCheck().token(forcingRefresh: false).token) }
+            Task { @MainActor in try? await Task.sleep(for: appCheckTimeout); resume(nil) }
         }
     }
 }

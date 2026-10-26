@@ -1,0 +1,160 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Additional verification is required.": {
+      "comment": "Error message when the server requires a checkpoint",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "נדרש אימות נוסף."
+          }
+        }
+      }
+    },
+    "An app update is required.": {
+      "comment": "Error message when the server requires an app update",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "נדרש עדכון של האפליקציה."
+          }
+        }
+      }
+    },
+    "Cancelled": {
+      "comment": "Error title for a cancelled request",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "בוטל"
+          }
+        }
+      }
+    },
+    "Connection Error": {
+      "comment": "Error title for a network failure",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "שגיאת חיבור"
+          }
+        }
+      }
+    },
+    "Error": {
+      "comment": "Generic error title",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "שגיאה"
+          }
+        }
+      }
+    },
+    "New Version Available": {
+      "comment": "Error title when the server requires a replacement app",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "גרסה חדשה זמינה"
+          }
+        }
+      }
+    },
+    "Please check your network connection.": {
+      "comment": "Error message for a network failure",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "בדוק את החיבור לרשת."
+          }
+        }
+      }
+    },
+    "Please download the latest version of the app.": {
+      "comment": "Error message when the server requires a replacement app",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הורד את הגרסה האחרונה של האפליקציה."
+          }
+        }
+      }
+    },
+    "Rate Limited": {
+      "comment": "Error title when the server throttles requests",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "יותר מדי בקשות"
+          }
+        }
+      }
+    },
+    "Request was cancelled.": {
+      "comment": "Error message for a cancelled request",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הבקשה בוטלה."
+          }
+        }
+      }
+    },
+    "Server Error": {
+      "comment": "Error title for a server failure",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "שגיאת שרת"
+          }
+        }
+      }
+    },
+    "Session Expired": {
+      "comment": "Error title when the session is no longer valid",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פג תוקף החיבור"
+          }
+        }
+      }
+    },
+    "Update Required": {
+      "comment": "Error title when the server requires an app update",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "נדרש עדכון"
+          }
+        }
+      }
+    },
+    "Verification Required": {
+      "comment": "Error title when the server requires a checkpoint",
+      "localizations": {
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "נדרש אימות"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

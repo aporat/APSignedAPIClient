@@ -496,7 +496,7 @@ struct CoreAPIClientTests {
         #expect(error.errorType == nil)
     }
 
-    @Test("errorType returns nil for non-failed cases")
+    @Test("errorType returns nil when the case carries none")
     func errorTypeNonFailed() {
         #expect(CoreAPIError.canceled.errorType == nil)
         #expect(CoreAPIError.connectionError(reason: "err").errorType == nil)
@@ -506,6 +506,49 @@ struct CoreAPIClientTests {
         #expect(CoreAPIError.updateRequired(responseJSON: nil).errorType == nil)
         #expect(CoreAPIError.downloadNewAppRequired(responseJSON: nil).errorType == nil)
         #expect(CoreAPIError.checkPointRequired(responseJSON: nil).errorType == nil)
+    }
+
+    @Test("errorType is carried by every server error case")
+    func errorTypeEveryCase() {
+        #expect(CoreAPIError.sessionExpired(reason: "err", errorType: "signed_out").errorType == "signed_out")
+        #expect(CoreAPIError.rateLimit(reason: "err", errorType: "post_limit").errorType == "post_limit")
+        #expect(CoreAPIError.serverError(reason: "err", errorType: "missing").errorType == "missing")
+        #expect(CoreAPIError.updateRequired(responseJSON: JSON(["error_type": "too_old"])).errorType == "too_old")
+    }
+
+    @Test("Response mapping keeps error_type whatever the status", arguments: [
+        (403, "failed"), (404, "serverError"), (406, "sessionExpired"), (410, "sessionExpired"),
+        (429, "rateLimit"), (500, "serverError")
+    ])
+    func generateErrorKeepsErrorType(statusCode: Int, expectedCase: String) throws {
+        let body = try JSONSerialization.data(withJSONObject: [
+            "error_message": "Nope", "error_type": "post_limit", "error_title": "Limit"
+        ])
+        let error = CoreAPIClient.generateError(from: Self.response(statusCode: statusCode, data: body))
+
+        #expect(error.errorType == "post_limit")
+        #expect(error.errorTitle == "Limit")
+        #expect(error.errorDescription == "Nope")
+        #expect(String(describing: error).hasPrefix(expectedCase))
+    }
+
+    @Test("Response mapping reports an explicit cancel as canceled")
+    func generateErrorCancelled() {
+        let response = DataResponse<JSON, AFError>(
+            request: nil, response: nil, data: nil, metrics: nil, serializationDuration: 0,
+            result: .failure(.explicitlyCancelled)
+        )
+        #expect(CoreAPIClient.generateError(from: response).isIgnorableError)
+    }
+
+    private static func response(statusCode: Int, data: Data) -> DataResponse<JSON, AFError> {
+        let url = URL(string: "https://api.example.com/test")!
+        return DataResponse(
+            request: URLRequest(url: url),
+            response: HTTPURLResponse(url: url, statusCode: statusCode, httpVersion: nil, headerFields: nil),
+            data: data, metrics: nil, serializationDuration: 0,
+            result: .failure(.responseValidationFailed(reason: .unacceptableStatusCode(code: statusCode)))
+        )
     }
 
     @Test("failed with errorType still surfaces correct errorDescription")

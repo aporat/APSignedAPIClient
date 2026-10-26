@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "APSignedAPIClient",
+    defaultLocalization: "en",
     platforms: [
         .iOS(.v17)
     ],
@@ -29,7 +30,8 @@ let package = Package(
                 "SwiftyJSON"
             ],
             resources: [
-                .process("PrivacyInfo.xcprivacy")
+                .process("PrivacyInfo.xcprivacy"),
+                .process("Localizable.xcstrings")
             ]
         ),
         .testTarget(

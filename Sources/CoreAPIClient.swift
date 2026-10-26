@@ -13,9 +13,12 @@ import os
 /// nothing more, nothing less.  Cases that include a `responseJSON` payload
 /// do so because the server body contains structured data (e.g. update URLs)
 /// that the caller may need to act on.
+///
+/// Every server error case carries the body's `error_type` (directly, or inside `responseJSON`),
+/// so a caller can key on `errorType` whatever HTTP status the server chose.
 public enum CoreAPIError: Error, LocalizedError {
-    
-    /// The request was explicitly cancelled (e.g. the owning object was deallocated).
+
+    /// The request was explicitly cancelled, by `cancel()` or by cancelling the calling Task.
     case canceled
     /// A network-level failure prevented the request from completing.
     case connectionError(reason: String)
@@ -32,46 +35,55 @@ public enum CoreAPIError: Error, LocalizedError {
     /// The server requires a checkpoint/challenge before the request can succeed.
     case checkPointRequired(responseJSON: JSON?)
     /// The session is no longer valid (fatal client error or invalid API token).
-    case sessionExpired(reason: String, title: String? = nil)
+    case sessionExpired(reason: String, errorType: String? = nil, title: String? = nil)
     /// The client has been rate-limited by the server.
-    case rateLimit(reason: String, title: String? = nil)
+    case rateLimit(reason: String, errorType: String? = nil, title: String? = nil)
     /// The requested resource was not found or the server encountered an internal error.
-    case serverError(reason: String, title: String? = nil)
-    
+    case serverError(reason: String, errorType: String? = nil, title: String? = nil)
+
     // MARK: - LocalizedError
-    
+
     public var errorDescription: String? {
         switch self {
         case .canceled:
-            return "Request was cancelled."
+            return String(localized: "Request was cancelled.", bundle: .module, comment: "Error message for a cancelled request")
         case .connectionError(let reason),
              .failed(let reason, _, _),
-             .sessionExpired(let reason, _),
-             .rateLimit(let reason, _),
-             .serverError(let reason, _):
+             .sessionExpired(let reason, _, _),
+             .rateLimit(let reason, _, _),
+             .serverError(let reason, _, _):
             return reason
         case .updateRequired(let json):
-            return json?["error_message"].string ?? "An app update is required."
+            return json?["error_message"].string ?? String(localized: "An app update is required.", bundle: .module, comment: "Error message when the server requires an app update")
         case .downloadNewAppRequired(let json):
-            return json?["error_message"].string ?? "Please download the latest version of the app."
+            return json?["error_message"].string ?? String(localized: "Please download the latest version of the app.", bundle: .module, comment: "Error message when the server requires a replacement app")
         case .checkPointRequired(let json):
-            return json?["error_message"].string ?? "Additional verification is required."
+            return json?["error_message"].string ?? String(localized: "Additional verification is required.", bundle: .module, comment: "Error message when the server requires a checkpoint")
         }
     }
-    
+
     // MARK: - DisplayableError
-    
+
     public var errorTitle: String {
         switch self {
-        case .canceled:                              return "Cancelled"
-        case .connectionError:                       return "Connection Error"
-        case .failed(_, _, let title):               return title ?? "Error"
-        case .updateRequired(let json):              return json?["error_title"].string ?? "Update Required"
-        case .downloadNewAppRequired(let json):      return json?["error_title"].string ?? "New Version Available"
-        case .checkPointRequired(let json):          return json?["error_title"].string ?? "Verification Required"
-        case .sessionExpired(_, let title):          return title ?? "Session Expired"
-        case .rateLimit(_, let title):               return title ?? "Rate Limited"
-        case .serverError(_, let title):             return title ?? "Server Error"
+        case .canceled:
+            return String(localized: "Cancelled", bundle: .module, comment: "Error title for a cancelled request")
+        case .connectionError:
+            return String(localized: "Connection Error", bundle: .module, comment: "Error title for a network failure")
+        case .failed(_, _, let title):
+            return title ?? String(localized: "Error", bundle: .module, comment: "Generic error title")
+        case .updateRequired(let json):
+            return json?["error_title"].string ?? String(localized: "Update Required", bundle: .module, comment: "Error title when the server requires an app update")
+        case .downloadNewAppRequired(let json):
+            return json?["error_title"].string ?? String(localized: "New Version Available", bundle: .module, comment: "Error title when the server requires a replacement app")
+        case .checkPointRequired(let json):
+            return json?["error_title"].string ?? String(localized: "Verification Required", bundle: .module, comment: "Error title when the server requires a checkpoint")
+        case .sessionExpired(_, _, let title):
+            return title ?? String(localized: "Session Expired", bundle: .module, comment: "Error title when the session is no longer valid")
+        case .rateLimit(_, _, let title):
+            return title ?? String(localized: "Rate Limited", bundle: .module, comment: "Error title when the server throttles requests")
+        case .serverError(_, _, let title):
+            return title ?? String(localized: "Server Error", bundle: .module, comment: "Error title for a server failure")
         }
     }
     
@@ -99,8 +111,24 @@ public enum CoreAPIError: Error, LocalizedError {
     /// Populated from the server's `error_type` field (e.g. `"x_account_connection_required"`).
     /// Callers can inspect this to take targeted action without parsing the human-readable message.
     public var errorType: String? {
-        if case .failed(_, let errorType, _) = self { return errorType }
-        return nil
+        switch self {
+        case .failed(_, let errorType, _),
+             .sessionExpired(_, let errorType, _),
+             .rateLimit(_, let errorType, _),
+             .serverError(_, let errorType, _):
+            return errorType
+        case .updateRequired(let json),
+             .downloadNewAppRequired(let json),
+             .checkPointRequired(let json):
+            return json?["error_type"].string
+        case .canceled, .connectionError:
+            return nil
+        }
+    }
+
+    /// The message for a request that never reached the server.
+    static var connectionFailureReason: String {
+        String(localized: "Please check your network connection.", bundle: .module, comment: "Error message for a network failure")
     }
 }
 
@@ -215,6 +243,7 @@ public final class CoreAPIClient: Sendable {
     
     // MARK: - Request
     
+    /// Cancelling the calling Task cancels the request, which then throws `.canceled`.
     @discardableResult
     public func request(
         _ path: String,
@@ -224,7 +253,7 @@ public final class CoreAPIClient: Sendable {
     ) async throws(CoreAPIError) -> JSON {
 
         guard Configuration.isReachable() else {
-            throw CoreAPIError.connectionError(reason: "Please check your network connection.")
+            throw CoreAPIError.connectionError(reason: CoreAPIError.connectionFailureReason)
         }
 
         // A prior cancel() only applies to requests in flight at that time.
@@ -239,7 +268,7 @@ public final class CoreAPIClient: Sendable {
         
         let dataTask = sessionManager.request(urlRequest)
             .validate()
-            .serializingDecodable(JSON.self)
+            .serializingDecodable(JSON.self, automaticallyCancelling: true)
         
         let response = await dataTask.response
         
@@ -247,7 +276,7 @@ public final class CoreAPIClient: Sendable {
         case .success(let value):
             return value
         case .failure:
-            throw generateError(from: response)
+            throw Self.generateError(from: response)
         }
     }
     
@@ -263,7 +292,7 @@ public final class CoreAPIClient: Sendable {
     ) async throws(CoreAPIError) -> JSON {
 
         guard Configuration.isReachable() else {
-            throw CoreAPIError.connectionError(reason: "Please check your network connection.")
+            throw CoreAPIError.connectionError(reason: CoreAPIError.connectionFailureReason)
         }
 
         // A prior cancel() only applies to requests in flight at that time.
@@ -295,7 +324,7 @@ public final class CoreAPIClient: Sendable {
             with: urlRequest
         )
         .validate()
-        .serializingDecodable(JSON.self)
+        .serializingDecodable(JSON.self, automaticallyCancelling: true)
 
         let response = await uploadTask.response
 
@@ -303,7 +332,7 @@ public final class CoreAPIClient: Sendable {
         case .success(let value):
             return value
         case .failure:
-            throw generateError(from: response)
+            throw Self.generateError(from: response)
         }
     }
     
@@ -426,10 +455,10 @@ public final class CoreAPIClient: Sendable {
         return string
     }
     
-    private func generateError<T>(from response: DataResponse<T, AFError>) -> CoreAPIError {
+    static func generateError<T>(from response: DataResponse<T, AFError>) -> CoreAPIError {
         if let afError = response.error {
             if afError.isExplicitlyCancelledError { return .canceled }
-            if afError.isSessionTaskError { return .connectionError(reason: "Please check your network connection.") }
+            if afError.isSessionTaskError { return .connectionError(reason: CoreAPIError.connectionFailureReason) }
         }
         
         var responseJSON: JSON?
@@ -455,9 +484,9 @@ public final class CoreAPIClient: Sendable {
         case .updateRequired: return .updateRequired(responseJSON: responseJSON)
         case .downloadNewApp: return .downloadNewAppRequired(responseJSON: responseJSON)
         case .checkPointRequired: return .checkPointRequired(responseJSON: responseJSON)
-        case .fatalClientError, .invalidAPIToken: return .sessionExpired(reason: errorMessage, title: errorTitle)
-        case .rateLimit: return .rateLimit(reason: errorMessage, title: errorTitle)
-        case .notFound, .internalServerError: return .serverError(reason: errorMessage, title: errorTitle)
+        case .fatalClientError, .invalidAPIToken: return .sessionExpired(reason: errorMessage, errorType: errorType, title: errorTitle)
+        case .rateLimit: return .rateLimit(reason: errorMessage, errorType: errorType, title: errorTitle)
+        case .notFound, .internalServerError: return .serverError(reason: errorMessage, errorType: errorType, title: errorTitle)
         case .notice, .clientError: return .failed(reason: errorMessage, errorType: errorType, title: errorTitle)
         default: return .failed(reason: errorMessage, errorType: errorType, title: errorTitle)
         }

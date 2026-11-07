@@ -467,6 +467,17 @@ struct CoreAPIClientTests {
         #expect(CoreAPIError.serverError(reason: "err").responseJSON == nil)
     }
 
+    @Test("responseJSON carries the server body on the server error cases")
+    func responseJSONOnServerErrors() {
+        let json = JSON(["error_type": "daily_request_limit_reached", "limit": 20, "extra_requests_price": 20])
+        #expect(CoreAPIError.failed(reason: "err", responseJSON: json).responseJSON?["limit"].int == 20)
+        #expect(CoreAPIError.sessionExpired(reason: "err", responseJSON: json).responseJSON?["limit"].int == 20)
+        #expect(CoreAPIError.rateLimit(reason: "err", responseJSON: json).responseJSON?["limit"].int == 20)
+        #expect(CoreAPIError.serverError(reason: "err", responseJSON: json).responseJSON?["extra_requests_price"].int == 20)
+        // The body never replaces the explicit fields.
+        #expect(CoreAPIError.failed(reason: "err", errorType: "other", responseJSON: json).errorType == "other")
+    }
+
     @Test("responseJSON returns nil when case has nil JSON")
     func responseJSONNilValue() {
         #expect(CoreAPIError.updateRequired(responseJSON: nil).responseJSON == nil)

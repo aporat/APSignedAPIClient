@@ -9,13 +9,10 @@ import os
 
 /// Errors returned by `CoreAPIClient`.
 ///
-/// Every case carries exactly the information a caller needs to react —
-/// nothing more, nothing less.  Cases that include a `responseJSON` payload
-/// do so because the server body contains structured data (e.g. update URLs)
-/// that the caller may need to act on.
-///
-/// Every server error case carries the body's `error_type` (directly, or inside `responseJSON`),
-/// so a caller can key on `errorType` whatever HTTP status the server chose.
+/// Every server error case carries the body's `error_type`, so a caller can key on `errorType`
+/// whatever HTTP status the server chose, and the whole JSON body as `responseJSON` when the
+/// server sent one, for the structured fields a specific error comes with (update URLs, a
+/// limit and the rows behind it, a price and the balance).
 public enum CoreAPIError: Error, LocalizedError {
 
     /// The request was explicitly cancelled, by `cancel()` or by cancelling the calling Task.
@@ -27,7 +24,8 @@ public enum CoreAPIError: Error, LocalizedError {
     ///   (e.g. `"x_account_connection_required"`) that callers can use to take targeted action.
     /// - `title`: an optional human-readable title from the server's `error_title` field,
     ///   shown as the alert title instead of the generic default.
-    case failed(reason: String, errorType: String? = nil, title: String? = nil)
+    /// - `responseJSON`: the server's whole body, for the fields a specific error carries.
+    case failed(reason: String, errorType: String? = nil, title: String? = nil, responseJSON: JSON? = nil)
     /// The server requires the app to be updated before continuing.
     case updateRequired(responseJSON: JSON?)
     /// The server requires the user to download a replacement app.
@@ -35,11 +33,11 @@ public enum CoreAPIError: Error, LocalizedError {
     /// The server requires a checkpoint/challenge before the request can succeed.
     case checkPointRequired(responseJSON: JSON?)
     /// The session is no longer valid (fatal client error or invalid API token).
-    case sessionExpired(reason: String, errorType: String? = nil, title: String? = nil)
+    case sessionExpired(reason: String, errorType: String? = nil, title: String? = nil, responseJSON: JSON? = nil)
     /// The client has been rate-limited by the server.
-    case rateLimit(reason: String, errorType: String? = nil, title: String? = nil)
+    case rateLimit(reason: String, errorType: String? = nil, title: String? = nil, responseJSON: JSON? = nil)
     /// The requested resource was not found or the server encountered an internal error.
-    case serverError(reason: String, errorType: String? = nil, title: String? = nil)
+    case serverError(reason: String, errorType: String? = nil, title: String? = nil, responseJSON: JSON? = nil)
 
     // MARK: - LocalizedError
 
@@ -48,10 +46,10 @@ public enum CoreAPIError: Error, LocalizedError {
         case .canceled:
             return String(localized: "Request was cancelled.", bundle: .module, comment: "Error message for a cancelled request")
         case .connectionError(let reason),
-             .failed(let reason, _, _),
-             .sessionExpired(let reason, _, _),
-             .rateLimit(let reason, _, _),
-             .serverError(let reason, _, _):
+             .failed(let reason, _, _, _),
+             .sessionExpired(let reason, _, _, _),
+             .rateLimit(let reason, _, _, _),
+             .serverError(let reason, _, _, _):
             return reason
         case .updateRequired(let json):
             return json?["error_message"].string ?? String(localized: "An app update is required.", bundle: .module, comment: "Error message when the server requires an app update")
@@ -70,7 +68,7 @@ public enum CoreAPIError: Error, LocalizedError {
             return String(localized: "Cancelled", bundle: .module, comment: "Error title for a cancelled request")
         case .connectionError:
             return String(localized: "Connection Error", bundle: .module, comment: "Error title for a network failure")
-        case .failed(_, _, let title):
+        case .failed(_, _, let title, _):
             return title ?? String(localized: "Error", bundle: .module, comment: "Generic error title")
         case .updateRequired(let json):
             return json?["error_title"].string ?? String(localized: "Update Required", bundle: .module, comment: "Error title when the server requires an app update")
@@ -78,11 +76,11 @@ public enum CoreAPIError: Error, LocalizedError {
             return json?["error_title"].string ?? String(localized: "New Version Available", bundle: .module, comment: "Error title when the server requires a replacement app")
         case .checkPointRequired(let json):
             return json?["error_title"].string ?? String(localized: "Verification Required", bundle: .module, comment: "Error title when the server requires a checkpoint")
-        case .sessionExpired(_, _, let title):
+        case .sessionExpired(_, _, let title, _):
             return title ?? String(localized: "Session Expired", bundle: .module, comment: "Error title when the session is no longer valid")
-        case .rateLimit(_, _, let title):
+        case .rateLimit(_, _, let title, _):
             return title ?? String(localized: "Rate Limited", bundle: .module, comment: "Error title when the server throttles requests")
-        case .serverError(_, _, let title):
+        case .serverError(_, _, let title, _):
             return title ?? String(localized: "Server Error", bundle: .module, comment: "Error title for a server failure")
         }
     }
@@ -94,14 +92,21 @@ public enum CoreAPIError: Error, LocalizedError {
     
     // MARK: - Helpers
     
-    /// The raw JSON body returned by the server, when available.
+    /// The raw JSON body returned by the server, when available: the fields a specific error
+    /// carries beyond its type and message (`error_type`, `error_message` and `error_title`
+    /// included). Nil for a request that never reached the server, and for an empty or
+    /// non-JSON body.
     public var responseJSON: JSON? {
         switch self {
         case .updateRequired(let json),
              .downloadNewAppRequired(let json),
-             .checkPointRequired(let json):
+             .checkPointRequired(let json),
+             .failed(_, _, _, let json),
+             .sessionExpired(_, _, _, let json),
+             .rateLimit(_, _, _, let json),
+             .serverError(_, _, _, let json):
             return json
-        default:
+        case .canceled, .connectionError:
             return nil
         }
     }
@@ -112,10 +117,10 @@ public enum CoreAPIError: Error, LocalizedError {
     /// Callers can inspect this to take targeted action without parsing the human-readable message.
     public var errorType: String? {
         switch self {
-        case .failed(_, let errorType, _),
-             .sessionExpired(_, let errorType, _),
-             .rateLimit(_, let errorType, _),
-             .serverError(_, let errorType, _):
+        case .failed(_, let errorType, _, _),
+             .sessionExpired(_, let errorType, _, _),
+             .rateLimit(_, let errorType, _, _),
+             .serverError(_, let errorType, _, _):
             return errorType
         case .updateRequired(let json),
              .downloadNewAppRequired(let json),
@@ -484,11 +489,11 @@ public final class CoreAPIClient: Sendable {
         case .updateRequired: return .updateRequired(responseJSON: responseJSON)
         case .downloadNewApp: return .downloadNewAppRequired(responseJSON: responseJSON)
         case .checkPointRequired: return .checkPointRequired(responseJSON: responseJSON)
-        case .fatalClientError, .invalidAPIToken: return .sessionExpired(reason: errorMessage, errorType: errorType, title: errorTitle)
-        case .rateLimit: return .rateLimit(reason: errorMessage, errorType: errorType, title: errorTitle)
-        case .notFound, .internalServerError: return .serverError(reason: errorMessage, errorType: errorType, title: errorTitle)
-        case .notice, .clientError: return .failed(reason: errorMessage, errorType: errorType, title: errorTitle)
-        default: return .failed(reason: errorMessage, errorType: errorType, title: errorTitle)
+        case .fatalClientError, .invalidAPIToken: return .sessionExpired(reason: errorMessage, errorType: errorType, title: errorTitle, responseJSON: responseJSON)
+        case .rateLimit: return .rateLimit(reason: errorMessage, errorType: errorType, title: errorTitle, responseJSON: responseJSON)
+        case .notFound, .internalServerError: return .serverError(reason: errorMessage, errorType: errorType, title: errorTitle, responseJSON: responseJSON)
+        case .notice, .clientError: return .failed(reason: errorMessage, errorType: errorType, title: errorTitle, responseJSON: responseJSON)
+        default: return .failed(reason: errorMessage, errorType: errorType, title: errorTitle, responseJSON: responseJSON)
         }
     }
     

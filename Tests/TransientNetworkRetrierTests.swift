@@ -8,14 +8,32 @@ struct TransientNetworkRetrierTests {
 
     // MARK: - Transient network errors
 
-    @Test("Retries transient URL errors regardless of method")
-    func retriesTransientURLErrors() {
+    @Test("Retries a request that never left the device regardless of method")
+    func retriesUnsentRequests() {
         let retrier = TransientNetworkRetrier()
-        #expect(retrier.shouldRetry(error: URLError(.timedOut), statusCode: nil, method: .get))
         #expect(retrier.shouldRetry(error: URLError(.dnsLookupFailed), statusCode: nil, method: .get))
+        #expect(retrier.shouldRetry(error: URLError(.dnsLookupFailed), statusCode: nil, method: .post))
         #expect(retrier.shouldRetry(error: URLError(.notConnectedToInternet), statusCode: nil, method: .post))
         #expect(retrier.shouldRetry(error: URLError(.cannotFindHost), statusCode: nil, method: .post))
-        #expect(retrier.shouldRetry(error: URLError(.networkConnectionLost), statusCode: nil, method: .post))
+    }
+
+    @Test("Retries a timeout or dropped connection for idempotent methods")
+    func retriesAmbiguousFailuresForIdempotentMethods() {
+        let retrier = TransientNetworkRetrier()
+        #expect(retrier.shouldRetry(error: URLError(.timedOut), statusCode: nil, method: .get))
+        #expect(retrier.shouldRetry(error: URLError(.networkConnectionLost), statusCode: nil, method: .get))
+        #expect(retrier.shouldRetry(error: URLError(.timedOut), statusCode: nil, method: .delete))
+    }
+
+    @Test("Does not replay a POST the server may already have processed")
+    func doesNotRetryAmbiguousFailuresForNonIdempotentMethods() {
+        let retrier = TransientNetworkRetrier()
+        #expect(!retrier.shouldRetry(error: URLError(.timedOut), statusCode: nil, method: .post))
+        #expect(!retrier.shouldRetry(error: URLError(.networkConnectionLost), statusCode: nil, method: .post))
+        #expect(!retrier.shouldRetry(error: AFError.sessionTaskFailed(error: URLError(.timedOut)), statusCode: nil, method: .post))
+        #expect(!retrier.shouldRetry(error: URLError(.timedOut), statusCode: nil, method: .patch))
+        // Unknown method (no URLRequest available) is treated as non-idempotent.
+        #expect(!retrier.shouldRetry(error: URLError(.timedOut), statusCode: nil, method: nil))
     }
 
     @Test("A zero retry count never retries, even transient errors")
@@ -40,11 +58,12 @@ struct TransientNetworkRetrierTests {
         #expect(retrier.shouldRetry(error: error, statusCode: nil, method: .get))
     }
 
-    @Test("Retries POSIX error 53 (software caused connection abort)")
+    @Test("Retries POSIX error 53 (software caused connection abort) for idempotent methods")
     func retriesPOSIXConnectionAbort() {
         let retrier = TransientNetworkRetrier()
         let error = NSError(domain: NSPOSIXErrorDomain, code: 53)
-        #expect(retrier.shouldRetry(error: error, statusCode: nil, method: .post))
+        #expect(retrier.shouldRetry(error: error, statusCode: nil, method: .get))
+        #expect(!retrier.shouldRetry(error: error, statusCode: nil, method: .post))
     }
 
     // MARK: - HTTP status codes

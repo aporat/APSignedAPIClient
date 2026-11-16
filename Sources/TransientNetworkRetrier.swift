@@ -4,9 +4,12 @@ import HTTPStatusCodes
 import os
 
 /// Retries requests once on transient network failures (timeouts, DNS, dropped
-/// connections) and on retryable 5xx responses. 5xx retries are limited to
-/// idempotent methods: a non-idempotent request that reached the server may
-/// have been partially processed, so replaying it risks duplicating the operation.
+/// connections) and on retryable 5xx responses. A failure that proves the request
+/// never left the device (no connection, no DNS answer) is retried for every method.
+/// One that leaves it open whether the server got the request (a timeout, a connection
+/// dropped mid-flight, a 5xx) is retried for idempotent methods only: the server may
+/// have processed a POST already, so replaying it risks doing the work twice (a
+/// second charge, or a "duplicate" error for the row the first attempt created).
 final class TransientNetworkRetrier: RequestRetrier, Sendable {
 
     private let maxRetryCount: UInt
@@ -24,11 +27,16 @@ final class TransientNetworkRetrier: RequestRetrier, Sendable {
         set { isReloadingCancelledLock.withLock { $0 = newValue } }
     }
 
-    private let transientURLErrorCodes: Set<URLError.Code> = [
-        .timedOut,
+    /// The request never reached a server, so replaying it cannot repeat anything.
+    private let unsentURLErrorCodes: Set<URLError.Code> = [
         .dnsLookupFailed,
         .notConnectedToInternet,
-        .cannotFindHost,
+        .cannotFindHost
+    ]
+
+    /// The request may have reached the server before the failure.
+    private let ambiguousURLErrorCodes: Set<URLError.Code> = [
+        .timedOut,
         .networkConnectionLost
     ]
 
@@ -50,12 +58,14 @@ final class TransientNetworkRetrier: RequestRetrier, Sendable {
     func shouldRetry(error: (any Error)?, statusCode: Int?, method: HTTPMethod?) -> Bool {
         if maxRetryCount == 0 || isReloadingCancelled { return false }
 
-        if let urlErr = extractURLError(from: error), transientURLErrorCodes.contains(urlErr.code) {
-            return true
+        if let urlErr = extractURLError(from: error) {
+            if unsentURLErrorCodes.contains(urlErr.code) { return true }
+            if ambiguousURLErrorCodes.contains(urlErr.code) { return isIdempotent(method) }
         }
 
+        // Software caused connection abort: the connection went away mid-request.
         if let nsError = error as? NSError, nsError.domain == NSPOSIXErrorDomain, nsError.code == 53 {
-            return true
+            return isIdempotent(method)
         }
 
         if let statusCode {

@@ -216,10 +216,11 @@ public final class CoreAPIClient: Sendable {
     ///     (`timeoutIntervalForRequest`). The server sends nothing until it has an answer, so this
     ///     is the effective limit on how long one call may take to produce a response.
     ///   - resourceTimeout: seconds the whole transfer may take (`timeoutIntervalForResource`).
-    ///   - retriesTransientFailures: whether a timeout, dropped connection or retryable 5xx is
-    ///     replayed once automatically. Pass `false` when a replay could repeat expensive,
-    ///     non-idempotent work (e.g. LLM generation), so the caller surfaces the failure and the
-    ///     user decides.
+    ///   - retriesTransientFailures: whether a transient failure is replayed once automatically.
+    ///     A request that never left the device is replayed for every method; a timeout, dropped
+    ///     connection or retryable 5xx only for idempotent ones, since the server may already
+    ///     have processed a POST. Pass `false` when even a replayed GET could repeat expensive
+    ///     work (e.g. LLM generation), so the caller surfaces the failure and the user decides.
     ///
     /// The defaults suit ordinary API calls. Long-running work belongs on a client of its own with
     /// longer limits, so the rest of an app's requests still fail promptly.
